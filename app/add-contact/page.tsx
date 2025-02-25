@@ -3,7 +3,7 @@ import Header from "@/src/components/Header";
 // pages/index.tsx
 
 import { useState, FormEvent } from "react";
-// import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 interface FormData {
     firstName: string;
@@ -15,7 +15,7 @@ interface FormData {
 
 export default function Home() {
 
-    //   const router = useRouter();
+      const router = useRouter();
     const [formData, setFormData] = useState<FormData>({
         firstName: "",
         lastName: "",
@@ -30,14 +30,15 @@ export default function Home() {
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
-        const res = await fetch("/api/submit", {
+        const res = await fetch("/api/contacts", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(formData),
         });
         if (res.ok) {
             // Redirect to dashboard or clear the form as needed
-            //   router.push("/dashboard");
+            console.log(res)
+              router.push("/dashboard")
         }
     };
 
