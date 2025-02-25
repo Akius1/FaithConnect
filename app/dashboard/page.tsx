@@ -38,10 +38,41 @@ export default function Dashboard() {
   // Memoize dummy data so it doesn't re-generate on each render.
   const dummyData = useMemo(() => generateDummyData(), []);
   const [searchTerm, setSearchTerm] = useState("");
+<<<<<<< Updated upstream
   const [filterPeriod, setFilterPeriod] = useState("day");
   const [filteredData, setFilteredData] = useState<Entry[]>(dummyData);
 
   // Update filtered data based on search term and selected filter period.
+=======
+  // Set default filter to "all" so that all contacts show initially.
+  const [filterPeriod, setFilterPeriod] = useState("all");
+  const [filteredData, setFilteredData] = useState<Entry[]>([]);
+
+  // Fetch contacts from the API on component mount.
+  useEffect(() => {
+    async function fetchContacts() {
+      try {
+        const res = await fetch("/api/contacts");
+        if (!res.ok) {
+          throw new Error("Failed to fetch contacts");
+        }
+        const data = await res.json();
+        // Convert createdAt from string to Date (use fallback if missing)
+        const parsedData: Entry[] = data.map((item: any) => ({
+          ...item,
+          createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
+        }));
+        // console.log("Fetched contacts:", parsedData);
+        setContacts(parsedData);
+      } catch (error) {
+        console.error("Error fetching contacts:", error);
+      }
+    }
+    fetchContacts();
+  }, []);
+
+  // Update filtered data based on searchTerm, filterPeriod, and contacts.
+>>>>>>> Stashed changes
   useEffect(() => {
     const now = new Date();
     const lowerSearch = searchTerm.toLowerCase();
@@ -70,10 +101,10 @@ export default function Dashboard() {
       } else if (filterPeriod === "year") {
         matchesFilter = diffDays <= 365;
       }
-
       return matchesSearch && matchesFilter;
     });
 
+    // console.log("Filtered data:", filtered);
     setFilteredData(filtered);
   }, [searchTerm, filterPeriod, dummyData]);
 
