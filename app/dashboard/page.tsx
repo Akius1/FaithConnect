@@ -15,38 +15,42 @@ interface Entry {
   createdAt: Date;
 }
 
-// Generate dummy data with a random "createdAt" date in the last year.
-const generateDummyData = (): Entry[] => {
-  const data: Entry[] = [];
-  for (let i = 1; i <= 25; i++) {
-    const randomDaysAgo = Math.floor(Math.random() * 365);
-    const createdAt = new Date();
-    createdAt.setDate(createdAt.getDate() - randomDaysAgo);
-    data.push({
-      firstName: `John${i}`,
-      lastName: `Doe${i}`,
-      address: `${i} Main Street`,
-      phone: `123-456-78${i.toString().padStart(2, "0")}`,
-      prayerPoint: "For peace and progress",
-      createdAt,
-    });
-  }
-  return data;
-};
-
 export default function Dashboard() {
-  // Memoize dummy data so it doesn't re-generate on each render.
-  const dummyData = useMemo(() => generateDummyData(), []);
+  // State to store contacts fetched from the API
+  const [contacts, setContacts] = useState<Entry[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterPeriod, setFilterPeriod] = useState("day");
-  const [filteredData, setFilteredData] = useState<Entry[]>(dummyData);
+  // Set default filter to "all" so that contacts show initially.
+  const [filterPeriod, setFilterPeriod] = useState("all");
+  const [filteredData, setFilteredData] = useState<Entry[]>([]);
 
-  // Update filtered data based on search term and selected filter period.
+  // Fetch contacts from the API on component mount.
+  useEffect(() => {
+    async function fetchContacts() {
+      try {
+        const res = await fetch("/api/contacts");
+        if (!res.ok) {
+          throw new Error("Failed to fetch contacts");
+        }
+        const data = await res.json();
+        // Convert createdAt from string to Date.
+        const parsedData: Entry[] = data.map((item: any) => ({
+          ...item,
+          createdAt: new Date(item.createdAt),
+        }));
+        setContacts(parsedData);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    fetchContacts();
+  }, []);
+
+  // Update filtered data based on searchTerm, filterPeriod, and contacts.
   useEffect(() => {
     const now = new Date();
     const lowerSearch = searchTerm.toLowerCase();
 
-    const filtered = dummyData.filter((entry) => {
+    const filtered = contacts.filter((entry) => {
       // Check if any string field contains the search term.
       const matchesSearch = Object.values(entry).some((value) => {
         if (typeof value === "string") {
@@ -55,29 +59,30 @@ export default function Dashboard() {
         return false;
       });
 
-      // Determine if the entry falls within the selected filter period.
+      // If filter is "all", then no time-based filtering is applied.
       let matchesFilter = true;
-      const diffTime = Math.abs(now.getTime() - entry.createdAt.getTime());
-      const diffDays = diffTime / (1000 * 3600 * 24);
+      if (filterPeriod !== "all") {
+        const diffTime = Math.abs(now.getTime() - entry.createdAt.getTime());
+        const diffDays = diffTime / (1000 * 3600 * 24);
 
-      if (filterPeriod === "day") {
-        // Only include today's entries.
-        matchesFilter = entry.createdAt.toDateString() === now.toDateString();
-      } else if (filterPeriod === "week") {
-        matchesFilter = diffDays <= 7;
-      } else if (filterPeriod === "month") {
-        matchesFilter = diffDays <= 30;
-      } else if (filterPeriod === "year") {
-        matchesFilter = diffDays <= 365;
+        if (filterPeriod === "day") {
+          matchesFilter = entry.createdAt.toDateString() === now.toDateString();
+        } else if (filterPeriod === "week") {
+          matchesFilter = diffDays <= 7;
+        } else if (filterPeriod === "month") {
+          matchesFilter = diffDays <= 30;
+        } else if (filterPeriod === "year") {
+          matchesFilter = diffDays <= 365;
+        }
       }
 
       return matchesSearch && matchesFilter;
     });
 
     setFilteredData(filtered);
-  }, [searchTerm, filterPeriod, dummyData]);
+  }, [searchTerm, filterPeriod, contacts]);
 
-  // react-table setup: columns and data.
+  // Setup react-table columns and data.
   const data = useMemo(() => filteredData, [filteredData]);
   const columns: readonly Column<Entry>[] = useMemo(
     () => [
@@ -89,6 +94,7 @@ export default function Dashboard() {
     ],
     []
   );
+
   const {
     getTableProps,
     getTableBodyProps,
@@ -153,6 +159,7 @@ export default function Dashboard() {
             className="border border-gray-300 rounded p-2 ml-4"
             style={{ width: "10%" }}
           >
+            <option value="all">All</option>
             <option value="day">Day</option>
             <option value="week">Week</option>
             <option value="month">Month</option>
@@ -168,7 +175,7 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Download Contact Button (full width container, button aligned right) */}
+        {/* Download Contact Button */}
         <div className="flex justify-end mb-4">
           <button
             onClick={() => console.log("Download Contact")}
