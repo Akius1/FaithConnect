@@ -15,6 +15,17 @@ interface Entry {
   createdAt: Date;
 }
 
+// Define a type for the raw API response.
+// Note: The API returns createdAt as a string.
+interface RawEntry {
+  firstName: string;
+  lastName: string;
+  address: string;
+  phone: string;
+  prayerPoint: string;
+  createdAt: string;
+}
+
 export default function Dashboard() {
   // State to store contacts fetched from the API
   const [contacts, setContacts] = useState<Entry[]>([]);
@@ -32,12 +43,11 @@ export default function Dashboard() {
           throw new Error("Failed to fetch contacts");
         }
         const data = await res.json();
-        // Convert createdAt from string to Date (use fallback if missing)
-        const parsedData: Entry[] = data.map((item: any) => ({
+        // Convert createdAt from string to Date.
+        const parsedData: Entry[] = (data as RawEntry[]).map((item) => ({
           ...item,
-          createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
+          createdAt: new Date(item.createdAt),
         }));
-        // console.log("Fetched contacts:", parsedData);
         setContacts(parsedData);
       } catch (error) {
         console.error("Error fetching contacts:", error);
@@ -76,10 +86,10 @@ export default function Dashboard() {
           matchesFilter = diffDays <= 365;
         }
       }
+
       return matchesSearch && matchesFilter;
     });
 
-    // console.log("Filtered data:", filtered);
     setFilteredData(filtered);
   }, [searchTerm, filterPeriod, contacts]);
 
