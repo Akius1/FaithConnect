@@ -8,8 +8,8 @@ import {
   UserPlusIcon,
   ChatBubbleLeftRightIcon,
   ChartBarIcon,
-  Bars3Icon,  // Hamburger menu icon
-  XMarkIcon,   // Close (X) icon
+  Bars3Icon, // Hamburger menu icon
+  XMarkIcon,  // Close (X) icon
 } from "@heroicons/react/24/outline";
 
 interface NavItem {
@@ -36,29 +36,28 @@ export default function ResponsiveSidebar() {
   return (
     <div className="relative min-h-screen flex">
       {/* Sidebar for large screens */}
-      <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-gray-200">
+      <aside className="hidden md:flex md:flex-col w-64 bg-gradient-to-br from-indigo-700 to-blue-600 shadow-lg">
         {/* Branding / Logo */}
-        <div className="p-4 text-xl font-bold border-b border-gray-200">
-        Faith Connect
+        <div className="p-4 text-2xl font-bold text-white border-b border-indigo-500">
+          Faith Connect
         </div>
         <nav className="flex-1 p-4">
-          <ul className="space-y-2">
+          <ul className="space-y-4">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
-
               return (
                 <li key={item.name}>
                   <Link
                     href={item.href}
-                    className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-md transition-colors ${
                       isActive
-                        ? "bg-blue-500 text-white"
-                        : "text-gray-700 hover:bg-gray-100"
+                        ? "bg-white text-indigo-700 font-semibold"
+                        : "text-white hover:bg-indigo-500"
                     }`}
                   >
-                    <Icon className="h-5 w-5" />
-                    <span className="font-medium">{item.name}</span>
+                    <Icon className="h-6 w-6" />
+                    <span>{item.name}</span>
                   </Link>
                 </li>
               );
@@ -71,7 +70,7 @@ export default function ResponsiveSidebar() {
       <div className="md:hidden flex items-center p-2">
         <button
           onClick={toggleSidebar}
-          className="text-gray-700 hover:text-gray-900 focus:outline-none"
+          className="text-indigo-700 hover:text-indigo-900 focus:outline-none"
         >
           <Bars3Icon className="h-6 w-6" />
         </button>
@@ -85,37 +84,37 @@ export default function ResponsiveSidebar() {
             className="fixed inset-0 bg-black bg-opacity-50"
             onClick={toggleSidebar}
           />
-
           {/* Sidebar panel */}
-          <aside className="relative w-64 bg-white border-r border-gray-200 flex flex-col">
-            <div className="p-4 flex justify-between items-center border-b border-gray-200">
-              <span className="text-xl font-bold">Faith Connect</span>
+          <aside className="relative w-64 bg-gradient-to-br from-indigo-700 to-blue-600 shadow-lg flex flex-col">
+            <div className="p-4 flex justify-between items-center border-b border-indigo-500">
+              <span className="text-2xl font-bold text-white">
+                Faith Connect
+              </span>
               <button
                 onClick={toggleSidebar}
-                className="text-gray-700 hover:text-gray-900 focus:outline-none"
+                className="text-white hover:text-gray-200 focus:outline-none"
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
             </div>
             <nav className="flex-1 p-4">
-              <ul className="space-y-2">
+              <ul className="space-y-4">
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = pathname === item.href;
-
                   return (
                     <li key={item.name}>
                       <Link
                         href={item.href}
                         onClick={() => setSidebarOpen(false)} // close on navigate
-                        className={`flex items-center space-x-3 px-3 py-2 rounded-md transition-colors ${
+                        className={`flex items-center space-x-3 px-4 py-3 rounded-md transition-colors ${
                           isActive
-                            ? "bg-blue-500 text-white"
-                            : "text-gray-700 hover:bg-gray-100"
+                            ? "bg-white text-indigo-700 font-semibold"
+                            : "text-white hover:bg-indigo-500"
                         }`}
                       >
-                        <Icon className="h-5 w-5" />
-                        <span className="font-medium">{item.name}</span>
+                        <Icon className="h-6 w-6" />
+                        <span>{item.name}</span>
                       </Link>
                     </li>
                   );
@@ -126,7 +125,7 @@ export default function ResponsiveSidebar() {
         </div>
       )}
 
-    
+     
     </div>
   );
 }

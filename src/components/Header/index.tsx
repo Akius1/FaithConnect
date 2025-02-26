@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
-
+import {  useUser } from "@clerk/nextjs";
 interface HeaderProps {
   appName: string;
   username: string;
@@ -12,6 +12,13 @@ interface HeaderProps {
 }
 
 export default function Header({ appName, username, profileImageUrl, onLogout }: HeaderProps) {
+    
+    const { isLoaded, user } = useUser();
+
+    if (!isLoaded) {
+        return <div>Loading...</div>;
+      }
+    
   return (
     <header className="w-full bg-white border-b">
       <div className="w-full flex justify-between  px-4 py-4">
@@ -24,14 +31,15 @@ export default function Header({ appName, username, profileImageUrl, onLogout }:
         <DropdownMenu.Root>
           <DropdownMenu.Trigger asChild>
             <button className="flex items-center space-x-2 focus:outline-none">
+            <span className="text-gray-800 font-medium">{user?.firstName} {user?.lastName}</span>
               <Image
-                src={profileImageUrl || "/default-profile.png"}
+                src={user?.imageUrl ?? ''}
                 alt="Profile"
                 width={40}
                 height={40}
                 className="rounded-full border border-gray-300"
               />
-              <span className="text-gray-800 font-medium">{username}</span>
+             
             </button>
           </DropdownMenu.Trigger>
           <DropdownMenu.Portal>
