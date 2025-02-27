@@ -19,8 +19,6 @@ export interface Entry {
   createdAt: Date;
 }
 
-// Define a type for the raw API response.
-// Note: The API returns createdAt as a string.
 interface RawEntry {
   id: string;
   firstName: string;
@@ -32,10 +30,8 @@ interface RawEntry {
 }
 
 export default function Dashboard() {
-  // State to store contacts fetched from the API
   const [contacts, setContacts] = useState<Entry[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  // Set default filter to "all" so that all contacts show initially.
   const [filterPeriod, setFilterPeriod] = useState("all");
   const [filteredData, setFilteredData] = useState<Entry[]>([]);
   const [selectedContactForDeletion, setSelectedContactForDeletion] = useState<Entry | null>(null);
@@ -48,7 +44,6 @@ export default function Dashboard() {
         const res = await fetch("/api/contacts");
         if (!res.ok) throw new Error("Failed to fetch contacts");
         const data = await res.json();
-        // Convert createdAt from string to Date.
         const parsedData: Entry[] = (data as RawEntry[]).map((item) => ({
           id: item.id,
           firstName: item.firstName,
@@ -103,6 +98,7 @@ export default function Dashboard() {
     });
     setFilteredData(filtered);
   }, [searchTerm, filterPeriod, contacts]);
+  
 
   // Delete contact API call with loader and toast notifications
   const handleDeleteContact = async (contact: Entry) => {

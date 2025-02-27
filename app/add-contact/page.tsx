@@ -1,19 +1,16 @@
 "use client";
-
 import Header from "@/src/components/Header";
-// pages/index.tsx
-
 import { useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import Head from "next/head";
 import toast, { Toaster } from "react-hot-toast";
 
 interface FormData {
-    firstName: string;
-    lastName: string;
-    address: string;
-    phone: string;
-    prayerPoint: string;
+  firstName: string;
+  lastName: string;
+  address: string;
+  phone: string;
+  prayerPoint: string;
 }
 
 export default function AddContact() {
