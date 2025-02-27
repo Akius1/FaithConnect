@@ -1,7 +1,9 @@
 "use client";
 
+import { Entry } from ".";
+
 interface DeleteConfirmationModalProps {
-  contact: any; // or use your Entry type
+  contact: Entry | null; // or use your Entry type
   onCancel: () => void;
   onConfirm: () => void;
   isDeleting: boolean;
