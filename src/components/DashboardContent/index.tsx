@@ -8,6 +8,7 @@ import toast, { Toaster } from "react-hot-toast";
 import SearchFilterBar from "./SearchFilterBar";
 import ContactsTable from "./ContactsTable";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
+import CustomDateFilterModal from "./CustomDateFilterModal";
 
 export interface Entry {
   id: string;
@@ -16,6 +17,9 @@ export interface Entry {
   address: string;
   phone: string;
   prayerPoint: string;
+  contactType: string;
+  serviceType: string;
+  contactDate: Date;
   createdAt: Date;
 }
 
@@ -26,16 +30,27 @@ interface RawEntry {
   address: string;
   phone: string;
   prayerPoint: string;
+  contactType: string;
+  serviceType: string;
+  contactDate: string;
   createdAt: string;
 }
 
 export default function Dashboard() {
   const [contacts, setContacts] = useState<Entry[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filterPeriod, setFilterPeriod] = useState("all");
+  // Set default values so the selects display the placeholder text.
+  const [periodFilter, setPeriodFilter] = useState("filterByPeriod");
+  const [contactTypeFilter, setContactTypeFilter] = useState("filterByContactType");
   const [filteredData, setFilteredData] = useState<Entry[]>([]);
   const [selectedContactForDeletion, setSelectedContactForDeletion] = useState<Entry | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Custom date states for custom filtering; default to today's date
+  const today = new Date().toISOString().split("T")[0];
+  const [customStartDate, setCustomStartDate] = useState(today);
+  const [customEndDate, setCustomEndDate] = useState(today);
+  const [showCustomModal, setShowCustomModal] = useState(false);
 
   // Fetch contacts from API
   useEffect(() => {
@@ -51,6 +66,9 @@ export default function Dashboard() {
           address: item.address,
           phone: item.phone,
           prayerPoint: item.prayerPoint,
+          contactType: item.contactType,
+          serviceType: item.serviceType,
+          contactDate: new Date(item.contactDate),
           createdAt: new Date(item.createdAt),
         }));
         setContacts(parsedData);
@@ -61,44 +79,63 @@ export default function Dashboard() {
     fetchContacts();
   }, []);
 
-  // Filter contacts based on search term and period
+  // Filtering contacts based on search term, period filter, custom date range, and contact type
   useEffect(() => {
     const now = new Date();
     const lowerSearch = searchTerm.toLowerCase();
+
+    // Treat placeholder values as "all"
+    const effectivePeriod = periodFilter === "filterByPeriod" ? "all" : periodFilter;
+    const effectiveContactType = contactTypeFilter === "filterByContactType" ? "all" : contactTypeFilter;
+
     const filtered = contacts.filter((entry) => {
-      // Check if any string field contains the search term.
       const matchesSearch = Object.values(entry).some((value) =>
         typeof value === "string" ? value.toLowerCase().includes(lowerSearch) : false
       );
       let matchesFilter = true;
-      const entryDate = entry.createdAt;
-      if (filterPeriod === "day") {
+      // Period filtering (using createdAt for preset periods)
+      if (effectivePeriod !== "all") {
+        if (["day", "week", "month", "year"].includes(effectivePeriod)) {
+          if (effectivePeriod === "day") {
+            matchesFilter =
+              entry.createdAt.getFullYear() === now.getFullYear() &&
+              entry.createdAt.getMonth() === now.getMonth() &&
+              entry.createdAt.getDate() === now.getDate();
+          } else if (effectivePeriod === "week") {
+            const startOfWeek = new Date(now);
+            startOfWeek.setDate(now.getDate() - now.getDay());
+            startOfWeek.setHours(0, 0, 0, 0);
+            const endOfWeek = new Date(startOfWeek);
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+            endOfWeek.setHours(23, 59, 59, 999);
+            matchesFilter =
+              entry.createdAt.getTime() >= startOfWeek.getTime() &&
+              entry.createdAt.getTime() <= endOfWeek.getTime();
+          } else if (effectivePeriod === "month") {
+            matchesFilter =
+              entry.createdAt.getFullYear() === now.getFullYear() &&
+              entry.createdAt.getMonth() === now.getMonth();
+          } else if (effectivePeriod === "year") {
+            matchesFilter = entry.createdAt.getFullYear() === now.getFullYear();
+          }
+        } else if (effectivePeriod === "custom") {
+          const start = new Date(customStartDate);
+          const end = new Date(customEndDate);
+          end.setHours(23, 59, 59, 999);
+          matchesFilter = entry.contactDate >= start && entry.contactDate <= end;
+        }
+      }
+      // Contact type filtering
+      if (effectiveContactType !== "all") {
         matchesFilter =
-          entryDate.getFullYear() === now.getFullYear() &&
-          entryDate.getMonth() === now.getMonth() &&
-          entryDate.getDate() === now.getDate();
-      } else if (filterPeriod === "week") {
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - now.getDay());
-        startOfWeek.setHours(0, 0, 0, 0);
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
-        endOfWeek.setHours(23, 59, 59, 999);
-        matchesFilter =
-          entryDate.getTime() >= startOfWeek.getTime() &&
-          entryDate.getTime() <= endOfWeek.getTime();
-      } else if (filterPeriod === "month") {
-        matchesFilter =
-          entryDate.getFullYear() === now.getFullYear() &&
-          entryDate.getMonth() === now.getMonth();
-      } else if (filterPeriod === "year") {
-        matchesFilter = entryDate.getFullYear() === now.getFullYear();
+          matchesFilter &&
+          entry.contactType?.toLowerCase() === effectiveContactType?.toLowerCase();
       }
       return matchesSearch && matchesFilter;
     });
+
     setFilteredData(filtered);
-  }, [searchTerm, filterPeriod, contacts]);
-  
+  }, [searchTerm, periodFilter, contactTypeFilter, customStartDate, customEndDate, contacts]);
 
   // Delete contact API call with loader and toast notifications
   const handleDeleteContact = async (contact: Entry) => {
@@ -151,16 +188,17 @@ export default function Dashboard() {
       {/* Toast container */}
       <Toaster position="top-right" />
 
-      <Header
-        appName="Dashboard"
-      />
+      <Header appName="Dashboard" />
 
       <main className="min-h-screen p-8 bg-gradient-to-br from-blue-50 to-purple-50">
         <SearchFilterBar
           searchTerm={searchTerm}
-          filterPeriod={filterPeriod}
+          periodFilter={periodFilter}
+          contactTypeFilter={contactTypeFilter}
           setSearchTerm={setSearchTerm}
-          setFilterPeriod={setFilterPeriod}
+          setPeriodFilter={setPeriodFilter}
+          setContactTypeFilter={setContactTypeFilter}
+          onOpenCustomModal={() => setShowCustomModal(true)}
         />
 
         <div className="flex justify-end mb-4">
@@ -176,9 +214,25 @@ export default function Dashboard() {
       <DeleteConfirmationModal
         contact={selectedContactForDeletion}
         onCancel={() => setSelectedContactForDeletion(null)}
-        onConfirm={() => selectedContactForDeletion && handleDeleteContact(selectedContactForDeletion)}
+        onConfirm={() =>
+          selectedContactForDeletion && handleDeleteContact(selectedContactForDeletion)
+        }
         isDeleting={isDeleting}
       />
+
+      {showCustomModal && (
+        <CustomDateFilterModal
+          initialStartDate={customStartDate}
+          initialEndDate={customEndDate}
+          onApply={(start, end) => {
+            setCustomStartDate(start);
+            setCustomEndDate(end);
+            setPeriodFilter("custom");
+            setShowCustomModal(false);
+          }}
+          onCancel={() => setShowCustomModal(false)}
+        />
+      )}
     </>
   );
 }

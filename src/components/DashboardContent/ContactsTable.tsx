@@ -4,8 +4,8 @@ import React, { useMemo, useState } from "react";
 import { useTable, usePagination, Column } from "react-table";
 import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
-import { Entry } from ".";
-// Adjust the import path as needed
+import moment from "moment";
+import { Entry } from "."; // Adjust the import path as needed
 
 interface ContactsTableProps {
   data: Entry[];
@@ -26,6 +26,13 @@ export default function ContactsTable({
       { Header: "Address", accessor: "address" },
       { Header: "Phone Number", accessor: "phone" },
       { Header: "Prayer Point", accessor: "prayerPoint" },
+      { Header: "Contact Type", accessor: "contactType" },
+      { Header: "Service Type", accessor: "serviceType" },
+      {
+        Header: "Contact Date",
+        accessor: "contactDate",
+        Cell: ({ value }) => moment(value).format("MMM DD, YYYY"),
+      },
       {
         Header: "Actions",
         Cell: ({ row }) => {
@@ -94,7 +101,7 @@ export default function ContactsTable({
   );
 
   return (
-    <section className="overflow-x-auto bg-white shadow-lg rounded-xl">
+    <section className="bg-white shadow-lg rounded-xl overflow-x-auto sm:overflow-x-visible hide-scrollbar">
       <table {...getTableProps()} className="min-w-full table-auto">
         <thead className="bg-indigo-100">
           {headerGroups.map((headerGroup) => (
@@ -102,8 +109,8 @@ export default function ContactsTable({
               {headerGroup.headers.map((column) => (
                 <th
                   {...column.getHeaderProps()}
-                  className="px-6 py-4 text-left text-sm font-medium text-gray-700"
                   key={column.id}
+                  className="px-4 py-3 text-left text-sm font-medium text-gray-700"
                 >
                   {column.render("Header")}
                 </th>
@@ -124,7 +131,7 @@ export default function ContactsTable({
                   <td
                     {...cell.getCellProps()}
                     key={cell.column.id}
-                    className="px-6 py-4 text-sm text-gray-600"
+                    className="px-4 py-3 text-sm text-gray-600"
                   >
                     {cell.render("Cell")}
                   </td>
@@ -135,11 +142,11 @@ export default function ContactsTable({
         </tbody>
       </table>
 
-      <div className="flex justify-between items-center p-4">
+      <div className="flex flex-col sm:flex-row justify-between items-center p-4">
         <button
           onClick={previousPage}
           disabled={!canPreviousPage}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded disabled:opacity-50 transition"
+          className="mb-2 sm:mb-0 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded disabled:opacity-50 transition"
         >
           Previous
         </button>
@@ -149,7 +156,7 @@ export default function ContactsTable({
         <button
           onClick={nextPage}
           disabled={!canNextPage}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded disabled:opacity-50 transition"
+          className="mt-2 sm:mt-0 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded disabled:opacity-50 transition"
         >
           Next
         </button>

@@ -1,23 +1,41 @@
 "use client";
 
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { useRouter } from "next/navigation";
 
 interface Props {
   searchTerm: string;
-  filterPeriod: string;
+  periodFilter: string;
+  contactTypeFilter: string;
   setSearchTerm: (value: string) => void;
-  setFilterPeriod: (value: string) => void;
+  setPeriodFilter: (value: string) => void;
+  setContactTypeFilter: (value: string) => void;
+  onOpenCustomModal: () => void;
 }
 
 export default function SearchFilterBar({
   searchTerm,
-  filterPeriod,
+  periodFilter,
+  contactTypeFilter,
   setSearchTerm,
-  setFilterPeriod,
+  setPeriodFilter,
+  setContactTypeFilter,
+  onOpenCustomModal,
 }: Props) {
+    const router = useRouter();
+  const handlePeriodChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    if (value === "custom") {
+      onOpenCustomModal();
+    } else {
+      setPeriodFilter(value);
+    }
+  };
+
   return (
     <section className="flex flex-col md:flex-row items-center gap-4 mb-6">
-      <div className="relative w-full md:w-1/3">
+      {/* Search Input */}
+      <div className="relative w-full md:w-1/5">
         <MagnifyingGlassIcon
           className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
           width={20}
@@ -31,22 +49,38 @@ export default function SearchFilterBar({
           className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
         />
       </div>
-      <div className="w-full md:w-1/5">
+      {/* Period Filter */}
+      <div className="flex flex-col w-full md:w-1/5">
         <select
-          value={filterPeriod}
-          onChange={(e) => setFilterPeriod(e.target.value)}
-          className="w-full border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
+          value={periodFilter}
+          onChange={handlePeriodChange}
+          className="w-full border border-gray-300 rounded-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
         >
+          <option value="filterByPeriod">Filter by Period</option>
           <option value="all">All</option>
           <option value="day">Day</option>
           <option value="week">Week</option>
           <option value="month">Month</option>
           <option value="year">Year</option>
+          <option value="custom">Custom</option>
         </select>
       </div>
-      <div className="w-full md:w-1/4 ml-auto">
+      {/* Contact Type Filter */}
+      <div className="flex flex-col w-full md:w-1/5">
+        <select
+          value={contactTypeFilter}
+          onChange={(e) => setContactTypeFilter(e.target.value)}
+          className="w-full border border-gray-300 rounded-full px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"
+        >
+          <option value="filterByContactType">Filter by Contact Type</option>
+          <option value="first timer">First Timer</option>
+          <option value="new convert">New Convert</option>
+        </select>
+      </div>
+      {/* Add Contact Button */}
+      <div className="w-full md:w-1/5 ml-auto">
         <button
-          onClick={() => console.log("Add Contact")}
+          onClick={() => router.push(`/add-contact`)}
           className="w-full bg-indigo-600 text-white px-4 py-2 rounded-full shadow hover:bg-indigo-700 transition transform hover:scale-105"
         >
           Add Contact

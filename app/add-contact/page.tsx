@@ -11,22 +11,29 @@ interface FormData {
   address: string;
   phone: string;
   prayerPoint: string;
+  contactType: string;
+  serviceType: string;
+  contactDate: string;
 }
 
 export default function AddContact() {
   const router = useRouter();
+  const today = new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
     address: "",
     phone: "",
     prayerPoint: "",
+    contactType: "",
+    serviceType: "",
+    contactDate: today,
   });
   const [loading, setLoading] = useState(false);
   const [phoneError, setPhoneError] = useState("");
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -84,7 +91,7 @@ export default function AddContact() {
         <title>Add Contact - Faith Connect</title>
         <meta
           name="description"
-          content="Add a new contact to Faith Connect. Provide details like name, address, phone number, and prayer point."
+          content="Add a new contact to Faith Connect. Provide details like name, address, phone number, prayer point, contact type, service type, and contact date."
         />
         <link rel="canonical" href="/add-contact" />
       </Head>
@@ -92,16 +99,16 @@ export default function AddContact() {
       {/* Toast Container */}
       <Toaster position="top-right" />
 
-      <Header
-        appName="Add Contact"
-      />
+      <Header appName="Add Contact" />
+
       <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100">
         <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
           <div className="bg-white shadow-2xl rounded-xl px-8 py-10 w-full max-w-md">
-            <h2 className="text-center text-3xl font-bold text-gray-800 mb-8">
+            <h2 className="text-center text-3xl font-bold text-gray-800 mb-6">
               Add Contact
             </h2>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* First Name */}
               <div>
                 <label
                   htmlFor="firstName"
@@ -115,9 +122,10 @@ export default function AddContact() {
                   id="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
               </div>
+              {/* Last Name */}
               <div>
                 <label
                   htmlFor="lastName"
@@ -131,9 +139,10 @@ export default function AddContact() {
                   id="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
               </div>
+              {/* Address */}
               <div>
                 <label
                   htmlFor="address"
@@ -147,9 +156,10 @@ export default function AddContact() {
                   id="address"
                   value={formData.address}
                   onChange={handleChange}
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
               </div>
+              {/* Phone Number */}
               <div>
                 <label
                   htmlFor="phone"
@@ -167,12 +177,75 @@ export default function AddContact() {
                   inputMode="numeric"
                   pattern="^0[7-9]\d{9}$"
                   required
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
                 {phoneError && (
                   <p className="text-red-500 text-sm mt-1">{phoneError}</p>
                 )}
               </div>
+              {/* Two Select Fields in a Row */}
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label
+                    htmlFor="contactType"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Contact Type
+                  </label>
+                  <select
+                    name="contactType"
+                    id="contactType"
+                    value={formData.contactType}
+                    onChange={handleChange}
+                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  >
+                    <option value="">Select Type</option>
+                    <option value="first timer">First Timer</option>
+                    <option value="new convert">New Convert</option>
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label
+                    htmlFor="serviceType"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Service Type
+                  </label>
+                  <select
+                    name="serviceType"
+                    id="serviceType"
+                    value={formData.serviceType}
+                    onChange={handleChange}
+                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  >
+                    <option value="">Select Service</option>
+                    <option value="crusade">Crusade</option>
+                    <option value="apostolic inversion">Apostolic Inversion</option>
+                    <option value="sunday service">Sunday Service</option>
+                    <option value="mid week service">Mid Week Service</option>
+                    <option value="www night">WWW Night</option>
+                    <option value="others">Others</option>
+                  </select>
+                </div>
+              </div>
+              {/* Creative Date Input */}
+              <div>
+                <label
+                  htmlFor="contactDate"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Date
+                </label>
+                <input
+                  type="date"
+                  name="contactDate"
+                  id="contactDate"
+                  value={formData.contactDate}
+                  onChange={handleChange}
+                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                />
+              </div>
+              {/* Prayer Point */}
               <div>
                 <label
                   htmlFor="prayerPoint"
@@ -186,13 +259,14 @@ export default function AddContact() {
                   value={formData.prayerPoint}
                   onChange={handleChange}
                   rows={4}
-                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  required
                 />
               </div>
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-md shadow-md text-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transform hover:scale-105 transition duration-200 disabled:opacity-50"
+                className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-md text-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transform hover:scale-105 transition duration-200 disabled:opacity-50"
               >
                 {loading ? (
                   <>
