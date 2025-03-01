@@ -19,6 +19,11 @@ export default function ContactsTable({
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const router = useRouter();
 
+  // Sort the data by createdAt descending (most recent on top)
+  const sortedData = useMemo(() => {
+    return [...data].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+  }, [data]);
+
   const columns: readonly Column<Entry>[] = useMemo(
     () => [
       { Header: "First Name", accessor: "firstName" },
@@ -94,7 +99,7 @@ export default function ContactsTable({
   } = useTable(
     {
       columns,
-      data,
+      data: sortedData,
       initialState: { pageIndex: 0, pageSize: 5 },
     },
     usePagination

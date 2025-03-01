@@ -22,7 +22,7 @@ const navItems: NavItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: HomeIcon },
   { name: "Add Contact", href: "/add-contact", icon: UserPlusIcon },
   { name: "Send SMS", href: "/send-sms", icon: ChatBubbleLeftRightIcon },
-  { name: "Statistic", href: "/statistic", icon: ChartBarIcon },
+  { name: "Statistic", href: "/statistics", icon: ChartBarIcon },
 ];
 
 export default function ResponsiveSidebar() {
