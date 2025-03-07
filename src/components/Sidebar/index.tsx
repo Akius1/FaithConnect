@@ -9,7 +9,7 @@ import {
   ChatBubbleLeftRightIcon,
   ChartBarIcon,
   Bars3Icon, // Hamburger menu icon
-  XMarkIcon,  // Close (X) icon
+  XMarkIcon, // Close (X) icon
 } from "@heroicons/react/24/outline";
 
 interface NavItem {
@@ -124,8 +124,6 @@ export default function ResponsiveSidebar() {
           </aside>
         </div>
       )}
-
-     
     </div>
   );
 }
