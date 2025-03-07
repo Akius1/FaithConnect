@@ -22,22 +22,19 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
 
-    // 'period' can be 'all', 'day', 'week', 'month', 'year', or 'custom'
+    // Retrieve query parameters
     const period = searchParams.get("period") || "all";
-    // 'search' can be any string to filter by (here filtering by phone)
     const search = searchParams.get("search") || "";
 
     // Build a base query from the "contacts" table
     let query = supabase.from("contacts").select("*");
 
-    // Optional: Filter by phone (using iLike for case-insensitive matching)
+    // Optional filtering by phone
     if (search) {
       query = query.ilike("phone", `%${search}%`);
     }
 
     const now = new Date();
-
-    // Apply date range filtering based on the period
     if (period === "day") {
       const start = startOfDay(now).toISOString();
       const end = endOfDay(now).toISOString();
@@ -55,7 +52,7 @@ export async function GET(request: NextRequest) {
       const end = endOfYear(now).toISOString();
       query = query.gte("createdAt", start).lte("createdAt", end);
     } else if (period === "custom") {
-      // Read custom date range parameters from the query
+      // Validate that custom date parameters are provided
       const customStart = searchParams.get("start");
       const customEnd = searchParams.get("end");
 
@@ -94,14 +91,26 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Generate an Excel file with phone numbers only
+    // Create an Excel workbook and worksheet
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("PhoneNumbers");
-    worksheet.columns = [{ header: "Phone Number", key: "phone" }];
+    const worksheet = workbook.addWorksheet("AllDetails");
 
-    data?.forEach((row) => {
-      worksheet.addRow({ phone: row.phone });
-    });
+    if (data && data.length > 0) {
+      // Dynamically build column headers based on keys from the first row
+      const columns = Object.keys(data[0]).map((key) => ({
+        header: key,
+        key,
+      }));
+      worksheet.columns = columns;
+
+      // Add each data row to the worksheet
+      data.forEach((row) => {
+        worksheet.addRow(row);
+      });
+    } else {
+      // If no data is available, add a single row stating so
+      worksheet.addRow({ info: "No data available" });
+    }
 
     // Convert the workbook to a buffer
     const buffer = await workbook.xlsx.writeBuffer();
@@ -110,16 +119,12 @@ export async function GET(request: NextRequest) {
     return new NextResponse(buffer, {
       status: 200,
       headers: {
-        "Content-Type":
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": 'attachment; filename="phone_numbers.xlsx"',
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": 'attachment; filename="all_details.xlsx"',
       },
     });
   } catch (err) {
     console.error(err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
