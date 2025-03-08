@@ -97,6 +97,9 @@ export async function GET(request: NextRequest) {
       "serviceType",
       "contactType",
       "contactDate",
+      "id",
+      "firstName",
+      "lastName",
     ];
 
     // Build the shareable WhatsApp message
@@ -110,8 +113,15 @@ export async function GET(request: NextRequest) {
     if (data && data.length > 0) {
       contactsMessage = data
         .map((record, index) => {
-          // For each contact, iterate over all keys excluding the ones specified
           let recordStr = `*Contact ${index + 1}:*\n`;
+
+          // Concatenate firstName and lastName to a single "name" field if available
+          const fullName = [record.firstName, record.lastName].filter(Boolean).join(" ");
+          if (fullName) {
+            recordStr += `*Name:* ${fullName}\n`;
+          }
+
+          // Iterate over all keys excluding the ones specified
           for (const [key, value] of Object.entries(record)) {
             if (!excludedKeys.includes(key)) {
               recordStr += `*${key}:* ${value}\n`;
