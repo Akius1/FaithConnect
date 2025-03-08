@@ -115,16 +115,16 @@ export async function GET(request: NextRequest) {
         .map((record, index) => {
           let recordStr = `*Contact ${index + 1}:*\n`;
 
-          // Concatenate firstName and lastName to a single "name" field if available
+          // Concatenate firstName and lastName into a single "Name" field; if empty, use "N/A"
           const fullName = [record.firstName, record.lastName].filter(Boolean).join(" ");
-          if (fullName) {
-            recordStr += `*Name:* ${fullName}\n`;
-          }
+          recordStr += `*Name:* ${fullName || "N/A"}\n`;
 
-          // Iterate over all keys excluding the ones specified
+          // Iterate over all keys excluding the ones specified.
           for (const [key, value] of Object.entries(record)) {
             if (!excludedKeys.includes(key)) {
-              recordStr += `*${key}:* ${value}\n`;
+              // If value is null, undefined, or an empty string, show "N/A"
+              const displayValue = value == null || value === "" ? "N/A" : value;
+              recordStr += `*${key}:* ${displayValue}\n`;
             }
           }
           return recordStr.trim();
