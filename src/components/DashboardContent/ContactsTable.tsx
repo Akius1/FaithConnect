@@ -104,7 +104,7 @@ export default function ContactsTable({
     {
       columns,
       data: sortedData,
-      initialState: { pageIndex: 0, pageSize: 5 },
+      initialState: { pageIndex: 0, pageSize: 10 },
     },
     usePagination
   );
