@@ -15,6 +15,8 @@ interface FormData {
   contactType: string;
   serviceType: string;
   contactDate: string;
+  gender: string;
+  district: string;
 }
 
 export default function EditContact() {
@@ -30,6 +32,8 @@ export default function EditContact() {
     contactType: "",
     serviceType: "",
     contactDate: today,
+    gender: "",
+    district: "",
   });
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
@@ -52,7 +56,11 @@ export default function EditContact() {
           prayerPoint: data.prayerPoint,
           contactType: data.contactType,
           serviceType: data.serviceType,
-          contactDate: data.contactDate ? data.contactDate.split("T")[0] : today,
+          gender: data.gender || "",
+          district: data.district || "",
+          contactDate: data.contactDate
+            ? data.contactDate.split("T")[0]
+            : today,
         });
       } catch (error) {
         console.error("Error fetching contact:", error);
@@ -67,7 +75,9 @@ export default function EditContact() {
   }, [id, today]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -131,7 +141,7 @@ export default function EditContact() {
         <title>Edit Contact - Faith Connect</title>
         <meta
           name="description"
-          content="Edit your contact details in Faith Connect. Update your name, address, phone number, prayer point, contact type, service type, and date."
+          content="Edit your contact details in Faith Connect. Update your name, address, phone number, prayer point, contact type, service type, gender, district and date."
         />
         <link rel="canonical" href={`/edit/${id}`} />
       </Head>
@@ -149,7 +159,10 @@ export default function EditContact() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* First Name */}
             <div>
-              <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="firstName"
+                className="block text-sm font-medium text-gray-700"
+              >
                 First Name
               </label>
               <input
@@ -164,7 +177,10 @@ export default function EditContact() {
             </div>
             {/* Last Name */}
             <div>
-              <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="lastName"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Last Name
               </label>
               <input
@@ -179,7 +195,10 @@ export default function EditContact() {
             </div>
             {/* Address */}
             <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="address"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Address
               </label>
               <input
@@ -194,7 +213,10 @@ export default function EditContact() {
             </div>
             {/* Phone Number */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Phone Number
               </label>
               <input
@@ -209,7 +231,10 @@ export default function EditContact() {
             </div>
             {/* Prayer Point */}
             <div>
-              <label htmlFor="prayerPoint" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="prayerPoint"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Prayer Point
               </label>
               <textarea
@@ -219,13 +244,15 @@ export default function EditContact() {
                 onChange={handleChange}
                 rows={4}
                 className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                required
               />
             </div>
             {/* Contact Type and Service Type */}
             <div className="flex gap-4">
               <div className="flex-1">
-                <label htmlFor="contactType" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="contactType"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Contact Type
                 </label>
                 <select
@@ -241,7 +268,10 @@ export default function EditContact() {
                 </select>
               </div>
               <div className="flex-1">
-                <label htmlFor="serviceType" className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="serviceType"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Service Type
                 </label>
                 <select
@@ -253,7 +283,9 @@ export default function EditContact() {
                 >
                   <option value="">Select Service</option>
                   <option value="crusade">Crusade</option>
-                  <option value="apostolic inversion">Apostolic Inversion</option>
+                  <option value="apostolic inversion">
+                    Apostolic Inversion
+                  </option>
                   <option value="sunday service">Sunday Service</option>
                   <option value="mid week service">Mid Week Service</option>
                   <option value="www night">WWW Night</option>
@@ -261,9 +293,57 @@ export default function EditContact() {
                 </select>
               </div>
             </div>
+            {/* New Row: Gender and District */}
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label
+                  htmlFor="gender"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Gender
+                </label>
+                <select
+                  name="gender"
+                  id="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                >
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div className="flex-1">
+                <label
+                  htmlFor="district"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  District
+                </label>
+                <select
+                  name="district"
+                  id="district"
+                  value={formData.district}
+                  onChange={handleChange}
+                  className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                >
+                  <option value="">Select District</option>
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <option key={i} value={`District ${i + 1}`}>
+                      District {i + 1}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
             {/* Contact Date */}
             <div>
-              <label htmlFor="contactDate" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="contactDate"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Date
               </label>
               <input

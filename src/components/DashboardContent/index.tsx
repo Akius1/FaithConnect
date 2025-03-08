@@ -19,6 +19,8 @@ export interface Entry {
   prayerPoint: string;
   contactType: string;
   serviceType: string;
+  gender: string;
+  district: string;
   contactDate: Date;
   createdAt: Date;
 }
@@ -32,6 +34,8 @@ interface RawEntry {
   prayerPoint: string;
   contactType: string;
   serviceType: string;
+  gender: string;
+  district: string;
   contactDate: string;
   createdAt: string;
 }
@@ -41,9 +45,12 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   // Set default values so the selects display the placeholder text.
   const [periodFilter, setPeriodFilter] = useState("filterByPeriod");
-  const [contactTypeFilter, setContactTypeFilter] = useState("filterByContactType");
+  const [contactTypeFilter, setContactTypeFilter] = useState(
+    "filterByContactType"
+  );
   const [filteredData, setFilteredData] = useState<Entry[]>([]);
-  const [selectedContactForDeletion, setSelectedContactForDeletion] = useState<Entry | null>(null);
+  const [selectedContactForDeletion, setSelectedContactForDeletion] =
+    useState<Entry | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Custom date states for custom filtering; default to today's date
@@ -66,6 +73,8 @@ export default function Dashboard() {
           address: item.address,
           phone: item.phone,
           prayerPoint: item.prayerPoint,
+          gender: item.gender,
+          district: item.district,
           contactType: item.contactType,
           serviceType: item.serviceType,
           contactDate: new Date(item.contactDate),
@@ -85,12 +94,16 @@ export default function Dashboard() {
     const lowerSearch = searchTerm.toLowerCase();
 
     // Treat placeholder values as "all"
-    const effectivePeriod = periodFilter === "filterByPeriod" ? "all" : periodFilter;
-    const effectiveContactType = contactTypeFilter === "filterByContactType" ? "all" : contactTypeFilter;
+    const effectivePeriod =
+      periodFilter === "filterByPeriod" ? "all" : periodFilter;
+    const effectiveContactType =
+      contactTypeFilter === "filterByContactType" ? "all" : contactTypeFilter;
 
     const filtered = contacts.filter((entry) => {
       const matchesSearch = Object.values(entry).some((value) =>
-        typeof value === "string" ? value.toLowerCase().includes(lowerSearch) : false
+        typeof value === "string"
+          ? value.toLowerCase().includes(lowerSearch)
+          : false
       );
       let matchesFilter = true;
       // Period filtering (using createdAt for preset periods)
@@ -122,26 +135,37 @@ export default function Dashboard() {
           const start = new Date(customStartDate);
           const end = new Date(customEndDate);
           end.setHours(23, 59, 59, 999);
-          matchesFilter = entry.contactDate >= start && entry.contactDate <= end;
+          matchesFilter =
+            entry.contactDate >= start && entry.contactDate <= end;
         }
       }
       // Contact type filtering
       if (effectiveContactType !== "all") {
         matchesFilter =
           matchesFilter &&
-          entry.contactType?.toLowerCase() === effectiveContactType?.toLowerCase();
+          entry.contactType?.toLowerCase() ===
+            effectiveContactType?.toLowerCase();
       }
       return matchesSearch && matchesFilter;
     });
 
     setFilteredData(filtered);
-  }, [searchTerm, periodFilter, contactTypeFilter, customStartDate, customEndDate, contacts]);
+  }, [
+    searchTerm,
+    periodFilter,
+    contactTypeFilter,
+    customStartDate,
+    customEndDate,
+    contacts,
+  ]);
 
   // Delete contact API call with loader and toast notifications
   const handleDeleteContact = async (contact: Entry) => {
     setIsDeleting(true);
     try {
-      const res = await fetch(`/api/contacts/${contact.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/contacts/${contact.id}`, {
+        method: "DELETE",
+      });
       if (!res.ok) throw new Error("Delete failed");
       setContacts((prev) => prev.filter((c) => c.id !== contact.id));
       toast.success("Contact deleted successfully!");
@@ -167,7 +191,10 @@ export default function Dashboard() {
           property="og:description"
           content="Access your dashboard on Faith Connect to manage contacts, send SMS, and view statistics."
         />
-        <meta property="og:url" content="https://www.yourdomain.com/dashboard" />
+        <meta
+          property="og:url"
+          content="https://www.yourdomain.com/dashboard"
+        />
         <meta property="og:type" content="website" />
         <link rel="canonical" href="https://www.yourdomain.com/dashboard" />
         <script
@@ -176,10 +203,10 @@ export default function Dashboard() {
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "WebPage",
-              "name": "Dashboard - Faith Connect",
-              "description":
+              name: "Dashboard - Faith Connect",
+              description:
                 "Access your dashboard on Faith Connect to manage contacts, send SMS, and view statistics.",
-              "url": "https://www.yourdomain.com/dashboard",
+              url: "https://www.yourdomain.com/dashboard",
             }),
           }}
         />
@@ -215,7 +242,8 @@ export default function Dashboard() {
         contact={selectedContactForDeletion}
         onCancel={() => setSelectedContactForDeletion(null)}
         onConfirm={() =>
-          selectedContactForDeletion && handleDeleteContact(selectedContactForDeletion)
+          selectedContactForDeletion &&
+          handleDeleteContact(selectedContactForDeletion)
         }
         isDeleting={isDeleting}
       />

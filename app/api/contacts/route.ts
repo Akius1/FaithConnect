@@ -26,21 +26,34 @@ export async function POST(request: Request) {
       contactType,
       serviceType,
       contactDate,
+      gender,
+      district,
     } = await request.json();
 
-    // Validate required fields
-    if (!firstName || !lastName || !phone || !contactType || !serviceType) {
+    // Validate required fields (only phone and contactDate are compulsory)
+    if (!phone || !contactDate) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { error: "Missing required fields: phone and contactDate" },
         { status: 400 }
       );
     }
 
-    // Insert into Supabase
+    // Insert into Supabase including the new fields: gender and district
     const { data, error } = await supabase
       .from("contacts")
       .insert([
-        { firstName, lastName, address, phone, prayerPoint, contactType, serviceType, contactDate },
+        {
+          firstName,
+          lastName,
+          address,
+          phone,
+          prayerPoint,
+          contactType,
+          serviceType,
+          contactDate,
+          gender,
+          district,
+        },
       ])
       .select(); // Returns the inserted row
 

@@ -14,6 +14,8 @@ interface FormData {
   contactType: string;
   serviceType: string;
   contactDate: string;
+  gender: string;
+  district: string;
 }
 
 export default function AddContact() {
@@ -28,12 +30,16 @@ export default function AddContact() {
     contactType: "",
     serviceType: "",
     contactDate: today,
+    gender: "",
+    district: "",
   });
   const [loading, setLoading] = useState(false);
   const [phoneError, setPhoneError] = useState("");
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -85,13 +91,16 @@ export default function AddContact() {
     }
   };
 
+  // Disable submit button if phone number or date is not filled
+  const isDisabled = !formData.phone.trim() || !formData.contactDate.trim();
+
   return (
     <>
       <Head>
         <title>Add Contact - Faith Connect</title>
         <meta
           name="description"
-          content="Add a new contact to Faith Connect. Provide details like name, address, phone number, prayer point, contact type, service type, and contact date."
+          content="Add a new contact to Faith Connect. Provide details like name, address, phone number, prayer point, contact type, service type, contact date, gender and district."
         />
         <link rel="canonical" href="/add-contact" />
       </Head>
@@ -183,7 +192,7 @@ export default function AddContact() {
                   <p className="text-red-500 text-sm mt-1">{phoneError}</p>
                 )}
               </div>
-              {/* Two Select Fields in a Row */}
+              {/* Two Select Fields in a Row for Contact Type and Service Type */}
               <div className="flex gap-4">
                 <div className="flex-1">
                   <label
@@ -220,7 +229,9 @@ export default function AddContact() {
                   >
                     <option value="">Select Service</option>
                     <option value="crusade">Crusade</option>
-                    <option value="apostolic inversion">Apostolic Inversion</option>
+                    <option value="apostolic inversion">
+                      Apostolic Inversion
+                    </option>
                     <option value="sunday service">Sunday Service</option>
                     <option value="mid week service">Mid Week Service</option>
                     <option value="www night">WWW Night</option>
@@ -228,13 +239,58 @@ export default function AddContact() {
                   </select>
                 </div>
               </div>
-              {/* Creative Date Input */}
+              {/* Two Select Fields in a Row for Gender and District */}
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label
+                    htmlFor="gender"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Gender
+                  </label>
+                  <select
+                    name="gender"
+                    id="gender"
+                    value={formData.gender}
+                    onChange={handleChange}
+                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label
+                    htmlFor="district"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    District
+                  </label>
+                  <select
+                    name="district"
+                    id="district"
+                    value={formData.district}
+                    onChange={handleChange}
+                    className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                  >
+                    <option value="">Select District</option>
+                    {Array.from({ length: 12 }, (_, i) => (
+                      <option key={i} value={`District ${i + 1}`}>
+                        District {i + 1}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              {/* Date Input */}
               <div>
                 <label
                   htmlFor="contactDate"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Date
+                  Date *
                 </label>
                 <input
                   type="date"
@@ -242,6 +298,7 @@ export default function AddContact() {
                   id="contactDate"
                   value={formData.contactDate}
                   onChange={handleChange}
+                  required
                   className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
               </div>
@@ -260,12 +317,11 @@ export default function AddContact() {
                   onChange={handleChange}
                   rows={4}
                   className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                  required
                 />
               </div>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || isDisabled}
                 className="w-full flex justify-center items-center py-3 px-4 border border-transparent rounded-lg shadow-md text-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 transform hover:scale-105 transition duration-200 disabled:opacity-50"
               >
                 {loading ? (

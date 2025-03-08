@@ -21,7 +21,9 @@ export default function ContactsTable({
 
   // Sort the data by createdAt descending (most recent on top)
   const sortedData = useMemo(() => {
-    return [...data].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    return [...data].sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+    );
   }, [data]);
 
   const columns: readonly Column<Entry>[] = useMemo(
@@ -33,6 +35,8 @@ export default function ContactsTable({
       { Header: "Prayer Point", accessor: "prayerPoint" },
       { Header: "Contact Type", accessor: "contactType" },
       { Header: "Service Type", accessor: "serviceType" },
+      { Header: "Gender", accessor: "gender" },
+      { Header: "District", accessor: "district" },
       {
         Header: "Contact Date",
         accessor: "contactDate",
