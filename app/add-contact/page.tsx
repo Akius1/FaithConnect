@@ -276,11 +276,12 @@ export default function AddContact() {
                     className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                   >
                     <option value="">Select District</option>
-                    {Array.from({ length: 12 }, (_, i) => (
+                    {Array.from({ length: 11 }, (_, i) => (
                       <option key={i} value={`District ${i + 1}`}>
                         District {i + 1}
                       </option>
                     ))}
+                    <option value="Out Station">Out Station</option>
                   </select>
                 </div>
               </div>

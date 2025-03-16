@@ -62,6 +62,15 @@ export default function ContactsTable({
                 <div className="absolute right-0 mt-2 w-32 bg-white border border-gray-200 rounded shadow-lg z-10">
                   <button
                     onClick={() => {
+                      router.push(`/dashboard/detail/${contact.id}`);
+                      setActiveDropdown(null);
+                    }}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  >
+                    View
+                  </button>
+                  <button
+                    onClick={() => {
                       router.push(`/edit-contact/${contact.id}`);
                       setActiveDropdown(null);
                     }}
@@ -110,7 +119,7 @@ export default function ContactsTable({
   );
 
   return (
-    <section className="bg-white shadow-lg rounded-xl overflow-x-auto sm:overflow-x-visible hide-scrollbar">
+    <section className="bg-white shadow-lg rounded-xl overflow-x-auto">
       <table {...getTableProps()} className="min-w-full table-auto">
         <thead className="bg-indigo-100">
           {headerGroups.map((headerGroup) => (
