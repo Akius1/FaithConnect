@@ -15,7 +15,20 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params; // Await the params before using them
+    const { id } = await params;
+
+    // First, delete related feedback rows to avoid foreign key violation
+    const { error: feedbackError } = await supabase
+      .from("feedback")
+      .delete()
+      .eq("contact_id", id);
+
+    if (feedbackError) {
+      console.error("Error deleting feedback for contact:", feedbackError);
+      return NextResponse.json({ error: feedbackError.message }, { status: 500 });
+    }
+
+    // Now, delete the contact
     const { data, error } = await supabase
       .from("contacts")
       .delete()
@@ -38,7 +51,6 @@ export async function DELETE(
     );
   }
 }
-
 export async function GET(
     request: Request,
     { params }: { params: Promise<{ id: string }> }

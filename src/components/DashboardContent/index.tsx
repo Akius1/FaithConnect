@@ -43,7 +43,6 @@ interface RawEntry {
 export default function Dashboard() {
   const [contacts, setContacts] = useState<Entry[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  // Set default values so the selects display the placeholder text.
   const [periodFilter, setPeriodFilter] = useState("filterByPeriod");
   const [contactTypeFilter, setContactTypeFilter] = useState(
     "filterByContactType"
@@ -93,7 +92,6 @@ export default function Dashboard() {
     const now = new Date();
     const lowerSearch = searchTerm.toLowerCase();
 
-    // Treat placeholder values as "all"
     const effectivePeriod =
       periodFilter === "filterByPeriod" ? "all" : periodFilter;
     const effectiveContactType =
@@ -106,7 +104,6 @@ export default function Dashboard() {
           : false
       );
       let matchesFilter = true;
-      // Period filtering (using createdAt for preset periods)
       if (effectivePeriod !== "all") {
         if (["day", "week", "month", "year"].includes(effectivePeriod)) {
           if (effectivePeriod === "day") {
@@ -139,7 +136,6 @@ export default function Dashboard() {
             entry.contactDate >= start && entry.contactDate <= end;
         }
       }
-      // Contact type filtering
       if (effectiveContactType !== "all") {
         matchesFilter =
           matchesFilter &&
@@ -217,7 +213,7 @@ export default function Dashboard() {
 
       <Header appName="Dashboard" />
 
-      <main className="min-h-screen p-8 bg-gradient-to-br from-blue-50 to-purple-50">
+      <main className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-4 px-4 sm:px-8 w-full overflow-x-hidden">
         <SearchFilterBar
           searchTerm={searchTerm}
           periodFilter={periodFilter}
@@ -228,7 +224,7 @@ export default function Dashboard() {
           onOpenCustomModal={() => setShowCustomModal(true)}
         />
 
-        <div className="flex justify-end mb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 w-full">
           <DownloadPhones />
         </div>
 
