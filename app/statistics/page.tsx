@@ -1,34 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { RedirectToSignIn, SignedIn, useUser } from "@clerk/nextjs";
 import StatisticsChart, {
-  StatisticsData,
+
 } from "@/src/components/StatisticsContent";
 
 export default function Statistic() {
   const { isLoaded, user } = useUser();
-  // Always call hooks at the top
-  const [stats, setStats] = useState<StatisticsData[]>([]);
+ 
 
-  // Only fetch stats when user is loaded and exists
-  useEffect(() => {
-    if (isLoaded && user) {
-      async function fetchStats() {
-        try {
-          const res = await fetch("/api/statistics");
-          if (!res.ok) {
-            throw new Error("Failed to fetch statistics");
-          }
-          const data = await res.json();
-          setStats(data);
-        } catch (error) {
-          console.error("Error fetching statistics:", error);
-        }
-      }
-      fetchStats();
-    }
-  }, [isLoaded, user]);
+
 
   // Conditional rendering based on user status:
   if (!isLoaded) {
@@ -69,7 +51,7 @@ export default function Statistic() {
 
   return (
     <SignedIn>
-      <StatisticsChart data={stats} />
+      <StatisticsChart />
     </SignedIn>
   );
 }

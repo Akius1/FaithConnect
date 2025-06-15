@@ -208,32 +208,61 @@ export default function Dashboard() {
         />
       </Head>
 
-      {/* Toast container */}
-      <Toaster position="top-right" />
+      {/* Toast container with responsive positioning */}
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          className: "text-sm",
+        }}
+      />
 
+      {/* Header Component */}
       <Header appName="Dashboard" />
 
-      <main className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-4 px-4 sm:px-8 w-full overflow-x-hidden">
-        <SearchFilterBar
-          searchTerm={searchTerm}
-          periodFilter={periodFilter}
-          contactTypeFilter={contactTypeFilter}
-          setSearchTerm={setSearchTerm}
-          setPeriodFilter={setPeriodFilter}
-          setContactTypeFilter={setContactTypeFilter}
-          onOpenCustomModal={() => setShowCustomModal(true)}
-        />
+      {/* Main Content Container */}
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+          {/* Search and Filter Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
+            <SearchFilterBar
+              searchTerm={searchTerm}
+              periodFilter={periodFilter}
+              contactTypeFilter={contactTypeFilter}
+              setSearchTerm={setSearchTerm}
+              setPeriodFilter={setPeriodFilter}
+              setContactTypeFilter={setContactTypeFilter}
+              onOpenCustomModal={() => setShowCustomModal(true)}
+            />
+          </div>
 
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 w-full">
-          <DownloadPhones />
+          {/* Actions Section */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex-1">
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-800">
+                Contact Management
+              </h2>
+              <p className="text-gray-600 text-sm sm:text-base mt-1">
+                {filteredData.length} contact
+                {filteredData.length !== 1 ? "s" : ""} found
+              </p>
+            </div>
+            <div className="w-full sm:w-auto">
+              <DownloadPhones />
+            </div>
+          </div>
+
+          {/* Contacts Table Section */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <ContactsTable
+              data={filteredData}
+              setSelectedContactForDeletion={setSelectedContactForDeletion}
+            />
+          </div>
         </div>
+      </div>
 
-        <ContactsTable
-          data={filteredData}
-          setSelectedContactForDeletion={setSelectedContactForDeletion}
-        />
-      </main>
-
+      {/* Modals */}
       <DeleteConfirmationModal
         contact={selectedContactForDeletion}
         onCancel={() => setSelectedContactForDeletion(null)}
