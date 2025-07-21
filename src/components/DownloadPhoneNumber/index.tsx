@@ -12,6 +12,7 @@ import {
   FaSearch,
   FaFilter,
   FaShare,
+  FaSortAmountDown,
 } from "react-icons/fa";
 import {
   ChevronDownIcon,
@@ -19,6 +20,7 @@ import {
   DocumentArrowDownIcon,
   PhoneIcon,
   MagnifyingGlassIcon,
+  MapPinIcon,
 } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
 
@@ -78,6 +80,7 @@ export default function DownloadPhones() {
       const url = new URL("/api/export/phone-numbers", window.location.origin);
       url.searchParams.set("period", period);
       url.searchParams.set("search", search);
+      url.searchParams.set("sortBy", "district"); // Add district sorting
       if (period === "custom" && start && end) {
         url.searchParams.set("start", start.toISOString());
         url.searchParams.set("end", end.toISOString());
@@ -90,13 +93,17 @@ export default function DownloadPhones() {
       const downloadUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = downloadUrl;
-      a.download = "phone_numbers.xlsx";
+      a.download = `phone_numbers_${
+        period === "custom" ? "custom_range" : period
+      }_by_district.xlsx`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(downloadUrl);
 
-      toast.success("📱 Phone numbers downloaded successfully!");
+      toast.success(
+        "📱 Phone numbers downloaded successfully! (Sorted by District)"
+      );
     } catch (error) {
       console.error(error);
       toast.error("Failed to download phone numbers. Please try again.");
@@ -112,6 +119,7 @@ export default function DownloadPhones() {
       const url = new URL("/api/export/all-details", window.location.origin);
       url.searchParams.set("period", period);
       url.searchParams.set("search", search);
+      url.searchParams.set("sortBy", "district"); // Add district sorting
       if (period === "custom" && start && end) {
         url.searchParams.set("start", start.toISOString());
         url.searchParams.set("end", end.toISOString());
@@ -124,13 +132,17 @@ export default function DownloadPhones() {
       const downloadUrl = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = downloadUrl;
-      a.download = "all_details.xlsx";
+      a.download = `all_details_${
+        period === "custom" ? "custom_range" : period
+      }_by_district.xlsx`;
       document.body.appendChild(a);
       a.click();
       a.remove();
       URL.revokeObjectURL(downloadUrl);
 
-      toast.success("📄 All details downloaded successfully!");
+      toast.success(
+        "📄 All details downloaded successfully! (Sorted by District)"
+      );
     } catch (error) {
       console.error(error);
       toast.error("Failed to download all details. Please try again.");
@@ -173,7 +185,7 @@ export default function DownloadPhones() {
       const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
       window.open(whatsappUrl, "_blank");
 
-      toast.success("💬 Opened WhatsApp for sharing!");
+      toast.success("💬 Opened WhatsApp for sharing! (Sorted by District)");
     } catch (error) {
       console.error(error);
       toast.error("Failed to share on WhatsApp. Please try again.");
@@ -222,7 +234,7 @@ export default function DownloadPhones() {
               <span>Custom Date Range</span>
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              Select your preferred date range for export
+              Select your preferred date range for export (sorted by district)
             </p>
           </div>
           <button
@@ -265,7 +277,7 @@ export default function DownloadPhones() {
                     (dateRange[1].getTime() - dateRange[0].getTime()) /
                       (1000 * 60 * 60 * 24)
                   ) + 1}{" "}
-                  days
+                  days • Results will be sorted by district
                 </p>
               </div>
             )}
@@ -386,12 +398,12 @@ export default function DownloadPhones() {
               <span>Export & Share</span>
             </h2>
             <p className="text-sm text-gray-500 mt-1">
-              Download contact data or share via WhatsApp
+              Download contact data or share via WhatsApp (sorted by district)
             </p>
           </div>
 
           {/* Quick Stats */}
-          <div className="flex items-center space-x-4 text-sm">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
             {period !== "all" && (
               <span className="inline-flex items-center space-x-1 bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-medium">
                 <FaFilter className="text-xs" />
@@ -410,6 +422,10 @@ export default function DownloadPhones() {
                 </span>
               </span>
             )}
+            <span className="inline-flex items-center space-x-1 bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
+              <FaSortAmountDown className="text-xs" />
+              <span>By District</span>
+            </span>
           </div>
         </div>
 
@@ -511,6 +527,24 @@ export default function DownloadPhones() {
         </div>
       </div>
 
+      {/* Sorting Info Banner */}
+      <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-xl p-4">
+        <div className="flex items-center space-x-3">
+          <div className="flex-shrink-0">
+            <MapPinIcon className="h-5 w-5 text-green-600" />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-green-800">
+              Results Sorted by District
+            </p>
+            <p className="text-xs text-green-600">
+              All exports and shares are automatically organized by district in
+              alphabetical order (A-Z)
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Download Section */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -520,7 +554,7 @@ export default function DownloadPhones() {
               <span>Download Options</span>
             </h3>
             <p className="text-sm text-gray-500 mt-1">
-              Export your filtered contact data
+              Export your filtered contact data (organized by district)
             </p>
           </div>
 
@@ -581,7 +615,7 @@ export default function DownloadPhones() {
                         Phone Numbers Only
                       </p>
                       <p className="text-xs text-gray-500">
-                        Export just the phone numbers
+                        Export phones sorted by district
                       </p>
                     </div>
                   </button>
@@ -623,7 +657,7 @@ export default function DownloadPhones() {
                         All Contact Details
                       </p>
                       <p className="text-xs text-gray-500">
-                        Complete contact information
+                        Complete info sorted by district
                       </p>
                     </div>
                   </button>

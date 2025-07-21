@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import {
@@ -84,6 +85,9 @@ export async function GET(request: NextRequest) {
         .lte("createdAt", endDate.toISOString());
     }
 
+    // Add sorting by district (ascending order) and then by createdAt (descending for most recent first)
+    query = query.order("district", { ascending: true }).order("createdAt", { ascending: false });
+
     // Execute the query to get matching contacts
     const { data, error } = await query;
     if (error) {
@@ -104,34 +108,56 @@ export async function GET(request: NextRequest) {
 
     // Build the shareable WhatsApp message
     const count = data ? data.length : 0;
-    let header = `*Contacts Share Summary:*\n`;
-    header += `*Period:* ${period}\n`;
-    header += `*Search:* ${search || "None"}\n`;
-    header += `*Found:* ${count} contact${count !== 1 ? "s" : ""}\n\n`;
+    let header = `*📋 Contacts Share Summary*\n`;
+    header += `*📅 Period:* ${getPeriodLabel(period)}\n`;
+    header += `*📊 Found:* ${count} contact${count !== 1 ? "s" : ""}\n`;
+    header += `*📍 Sorted by:* District (A-Z)\n\n`;
 
     let contactsMessage = "";
     if (data && data.length > 0) {
-      contactsMessage = data
-        .map((record, index) => {
-          let recordStr = `*Contact ${index + 1}:*\n`;
+      // Group contacts by district for better organization
+      const contactsByDistrict = data.reduce((acc: any, contact: any) => {
+        const district = contact.district || "Unknown District";
+        if (!acc[district]) {
+          acc[district] = [];
+        }
+        acc[district].push(contact);
+        return acc;
+      }, {});
 
-          // Concatenate firstName and lastName into a single "Name" field; if empty, use "N/A"
-          const fullName = [record.firstName, record.lastName].filter(Boolean).join(" ");
-          recordStr += `*Name:* ${fullName || "N/A"}\n`;
+      // Build message grouped by district
+      contactsMessage = Object.entries(contactsByDistrict)
+        .sort(([a], [b]) => a.localeCompare(b)) // Sort districts alphabetically
+        .map(([district, contacts]: [string, any]) => {
+          let districtSection = `*🏘️ ${district}*\n`;
+          districtSection += `━━━━━━━━━━━━━━━━\n`;
+          
+          districtSection += (contacts as any[])
+            .map((record, index) => {
+              let recordStr = `*${index + 1}.* `;
 
-          // Iterate over all keys excluding the ones specified.
-          for (const [key, value] of Object.entries(record)) {
-            if (!excludedKeys.includes(key)) {
-              // If value is null, undefined, or an empty string, show "N/A"
-              const displayValue = value == null || value === "" ? "N/A" : value;
-              recordStr += `*${key}:* ${displayValue}\n`;
-            }
-          }
-          return recordStr.trim();
+              // Concatenate firstName and lastName into a single "Name" field
+              const fullName = [record.firstName, record.lastName].filter(Boolean).join(" ");
+              recordStr += `*${fullName || "N/A"}*\n`;
+
+              // Iterate over all keys excluding the ones specified
+              for (const [key, value] of Object.entries(record)) {
+                if (!excludedKeys.includes(key) && key !== "district") {
+                  // Format key names for better readability
+                  const formattedKey = formatKeyName(key);
+                  const displayValue = value == null || value === "" ? "N/A" : value;
+                  recordStr += `   ${formattedKey}: ${displayValue}\n`;
+                }
+              }
+              return recordStr.trim();
+            })
+            .join("\n\n");
+          
+          return districtSection;
         })
         .join("\n\n");
     } else {
-      contactsMessage = "No contacts available.";
+      contactsMessage = "📭 No contacts available for the selected criteria.";
     }
 
     const message = header + contactsMessage;
@@ -141,4 +167,31 @@ export async function GET(request: NextRequest) {
     console.error(err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
+}
+
+// Helper function to get readable period labels
+function getPeriodLabel(period: string): string {
+  switch (period) {
+    case "day":
+      return "Today";
+    case "week":
+      return "This Week";
+    case "month":
+      return "This Month";
+    case "year":
+      return "This Year";
+    case "custom":
+      return "Custom Range";
+    default:
+      return "All Time";
+  }
+}
+
+// Helper function to format database key names for display
+function formatKeyName(key: string): string {
+  // Convert camelCase to readable format
+  return key
+    .replace(/([A-Z])/g, ' $1') // Add space before capital letters
+    .replace(/^./, (str) => str.toUpperCase()) // Capitalize first letter
+    .trim();
 }

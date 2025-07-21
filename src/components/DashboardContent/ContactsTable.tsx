@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useEffect, useRef } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { useTable, usePagination, Column } from "react-table";
 import {
   EllipsisVerticalIcon,
@@ -22,15 +22,66 @@ export default function ContactsTable({
 }: ContactsTableProps) {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const router = useRouter();
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  // Memoized event handlers to prevent unnecessary re-renders
+  const handleViewDetails = useCallback(
+    (contactId: string) => {
+      console.log("Navigating to detail page for contact:", contactId);
+      if (!contactId) {
+        console.error("Contact ID is missing");
+        return;
+      }
+      router.push(`/dashboard/detail/${contactId}`);
+      setActiveDropdown(null);
+    },
+    [router]
+  );
+
+  const handleEdit = useCallback(
+    (contactId: string) => {
+      console.log("Navigating to edit page for contact:", contactId);
+      if (!contactId) {
+        console.error("Contact ID is missing");
+        return;
+      }
+      router.push(`/edit-contact/${contactId}`);
+      setActiveDropdown(null);
+    },
+    [router]
+  );
+
+  const handleDelete = useCallback(
+    (contact: Entry) => {
+      setSelectedContactForDeletion(contact);
+      setActiveDropdown(null);
+    },
+    [setSelectedContactForDeletion]
+  );
+
+  const toggleDropdown = useCallback(
+    (contactId: string) => {
+      setActiveDropdown(activeDropdown === contactId ? null : contactId);
+    },
+    [activeDropdown]
+  );
 
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      const target = event.target as Element;
+      if (!target.closest(".dropdown-container")) {
+        setActiveDropdown(null);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      const target = event.target as Element;
+      if (!target.closest(".dropdown-container")) {
         setActiveDropdown(null);
       }
     }
@@ -142,45 +193,76 @@ export default function ContactsTable({
         Header: "Actions",
         Cell: ({ row }) => {
           const contact = row.original;
+
+          const handleViewDetails = (e: React.MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (!contact.id) {
+              console.error("Contact ID is missing:", contact);
+              return;
+            }
+            router.push(`/dashboard/detail/${contact.id}`);
+            setActiveDropdown(null);
+          };
+
+          const handleEdit = (e: React.MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (!contact.id) {
+              console.error("Contact ID is missing:", contact);
+              return;
+            }
+            router.push(`/edit-contact/${contact.id}`);
+            setActiveDropdown(null);
+          };
+
+          const handleDelete = (e: React.MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setSelectedContactForDeletion(contact);
+            setActiveDropdown(null);
+          };
+
+          const toggleDropdown = (e: React.MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setActiveDropdown(
+              activeDropdown === contact.id ? null : contact.id
+            );
+          };
+
           return (
-            <div className="relative" ref={dropdownRef}>
+            <div className="relative dropdown-container">
               <button
-                onClick={() =>
-                  setActiveDropdown(
-                    activeDropdown === contact.id ? null : contact.id
-                  )
-                }
+                onClick={toggleDropdown}
                 className="p-2 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-full transition-colors"
+                type="button"
               >
                 <EllipsisVerticalIcon className="h-5 w-5" />
               </button>
               {activeDropdown === contact.id && (
-                <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+                <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1">
                   <button
-                    onClick={() => {
-                      router.push(`/dashboard/detail/${contact.id}`);
-                      setActiveDropdown(null);
-                    }}
+                    onClick={handleViewDetails}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    type="button"
                   >
                     👁️ View Details
                   </button>
                   <button
-                    onClick={() => {
-                      router.push(`/edit-contact/${contact.id}`);
-                      setActiveDropdown(null);
-                    }}
+                    onClick={handleEdit}
                     className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    type="button"
                   >
                     ✏️ Edit
                   </button>
                   <hr className="my-1" />
                   <button
-                    onClick={() => {
-                      setSelectedContactForDeletion(contact);
-                      setActiveDropdown(null);
-                    }}
+                    onClick={handleDelete}
                     className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    type="button"
                   >
                     🗑️ Delete
                   </button>
@@ -191,7 +273,13 @@ export default function ContactsTable({
         },
       },
     ],
-    [activeDropdown, router, setSelectedContactForDeletion]
+    [
+      handleViewDetails,
+      handleEdit,
+      handleDelete,
+      toggleDropdown,
+      activeDropdown,
+    ]
   );
 
   const {
@@ -310,7 +398,7 @@ export default function ContactsTable({
               <span className="hidden sm:inline">Previous</span>
             </button>
 
-            {/* Page Numbers */}
+            {/* Page Numbers - FIXED: Added unique key prop */}
             <div className="hidden sm:flex space-x-1">
               {Array.from({ length: Math.min(5, pageCount) }, (_, i) => {
                 let pageNum;
@@ -326,7 +414,7 @@ export default function ContactsTable({
 
                 return (
                   <button
-                    key={pageNum}
+                    key={`page-${pageNum}`} // FIXED: Added unique key prop
                     onClick={() => gotoPage(pageNum)}
                     className={`relative inline-flex items-center px-3 py-2 border text-sm font-medium rounded-md transition-colors ${
                       pageIndex === pageNum
