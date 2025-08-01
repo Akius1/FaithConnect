@@ -22,15 +22,20 @@ export default function ContactsTable({
 }: ContactsTableProps) {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const router = useRouter();
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
+      const target = event.target as HTMLElement;
+
+      // Don't close if clicking on dropdown buttons
+      if (target.closest("[data-dropdown-content]")) {
+        return;
+      }
+
+      // Close dropdown if clicking outside the table
+      if (tableRef.current && !tableRef.current.contains(target)) {
         setActiveDropdown(null);
       }
     }
@@ -47,6 +52,31 @@ export default function ContactsTable({
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
     );
   }, [data]);
+
+  // Handle button clicks with proper event handling
+  const handleViewDetails = (contactId: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    console.log("Navigating to view details for:", contactId); // Debug log
+    router.push(`/dashboard/detail/${contactId}`);
+    setActiveDropdown(null);
+  };
+
+  const handleEdit = (contactId: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    console.log("Navigating to edit for:", contactId); // Debug log
+    router.push(`/edit-contact/${contactId}`);
+    setActiveDropdown(null);
+  };
+
+  const handleDelete = (contact: Entry, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    console.log("Setting contact for deletion:", contact.id); // Debug log
+    setSelectedContactForDeletion(contact);
+    setActiveDropdown(null);
+  };
 
   const columns: readonly Column<Entry>[] = useMemo(
     () => [
@@ -143,46 +173,50 @@ export default function ContactsTable({
         Cell: ({ row }) => {
           const contact = row.original;
           return (
-            <div className="relative" ref={dropdownRef}>
+            <div className="relative">
               <button
-                onClick={() =>
+                onClick={(e) => {
+                  e.stopPropagation();
                   setActiveDropdown(
                     activeDropdown === contact.id ? null : contact.id
-                  )
-                }
+                  );
+                }}
                 className="p-2 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded-full transition-colors"
+                aria-label="Actions menu"
               >
                 <EllipsisVerticalIcon className="h-5 w-5" />
               </button>
+
               {activeDropdown === contact.id && (
-                <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+                <div
+                  data-dropdown-content
+                  className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-30 py-1"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button
-                    onClick={() => {
-                      router.push(`/dashboard/detail/${contact.id}`);
-                      setActiveDropdown(null);
-                    }}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    onClick={(e) => handleViewDetails(contact.id, e)}
+                    className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
-                    👁️ View Details
+                    <span className="mr-2">👁️</span>
+                    View Details
                   </button>
+
                   <button
-                    onClick={() => {
-                      router.push(`/edit-contact/${contact.id}`);
-                      setActiveDropdown(null);
-                    }}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    onClick={(e) => handleEdit(contact.id, e)}
+                    className="flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
-                    ✏️ Edit
+                    <span className="mr-2">✏️</span>
+                    Edit Contact
                   </button>
-                  <hr className="my-1" />
+
+                  <hr className="my-1 border-gray-100" />
+
                   <button
-                    onClick={() => {
-                      setSelectedContactForDeletion(contact);
-                      setActiveDropdown(null);
-                    }}
-                    className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    onClick={(e) => handleDelete(contact, e)}
+                    className="flex items-center w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                   >
-                    🗑️ Delete
+                    <span className="mr-2">🗑️</span>
+                    Delete Contact
                   </button>
                 </div>
               )}
@@ -232,7 +266,7 @@ export default function ContactsTable({
   }
 
   return (
-    <div className="overflow-hidden">
+    <div className="overflow-hidden" ref={tableRef}>
       {/* Table Container */}
       <div className="overflow-x-auto">
         <table

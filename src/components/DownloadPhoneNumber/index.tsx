@@ -12,6 +12,8 @@ import {
   FaSearch,
   FaFilter,
   FaShare,
+  FaCopy,
+  FaSortAlphaDown,
 } from "react-icons/fa";
 import {
   ChevronDownIcon,
@@ -27,6 +29,8 @@ export default function DownloadPhones() {
   const [search, setSearch] = useState("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareMessage, setShareMessage] = useState("");
   const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([
     null,
     null,
@@ -153,7 +157,7 @@ export default function DownloadPhones() {
     setDropdownOpen(false);
   };
 
-  // Enhanced WhatsApp share function
+  // Enhanced WhatsApp share function with multiple options
   const shareOnWhatsApp = async () => {
     setIsSharing(true);
     try {
@@ -170,16 +174,57 @@ export default function DownloadPhones() {
 
       const data = await res.json();
       const message = data.message;
-      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-      window.open(whatsappUrl, "_blank");
+      setShareMessage(message);
+      setShowShareModal(true);
 
-      toast.success("💬 Opened WhatsApp for sharing!");
+      toast.success("💬 Share options ready!");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to share on WhatsApp. Please try again.");
+      toast.error("Failed to prepare WhatsApp share. Please try again.");
     } finally {
       setIsSharing(false);
     }
+  };
+
+  // Copy message to clipboard
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(shareMessage);
+      toast.success("📋 Message copied to clipboard!");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to copy message.");
+    }
+  };
+
+  // Try different WhatsApp share methods
+  const tryWhatsAppShare = (method: "api" | "web" | "mobile") => {
+    const encodedMessage = encodeURIComponent(shareMessage);
+    let whatsappUrl = "";
+
+    switch (method) {
+      case "api":
+        whatsappUrl = `https://api.whatsapp.com/send?text=${encodedMessage}`;
+        break;
+      case "web":
+        whatsappUrl = `https://web.whatsapp.com/send?text=${encodedMessage}`;
+        break;
+      case "mobile":
+        whatsappUrl = `whatsapp://send?text=${encodedMessage}`;
+        break;
+    }
+
+    // Try to open the link
+    const newWindow = window.open(whatsappUrl, "_blank");
+
+    // If window didn't open, show a fallback
+    setTimeout(() => {
+      if (!newWindow || newWindow.closed) {
+        toast.error(
+          `${method} method didn't work. Try another option or copy the message.`
+        );
+      }
+    }, 1000);
   };
 
   // Get period label for display
@@ -200,7 +245,7 @@ export default function DownloadPhones() {
     }
   };
 
-  // Enhanced Modal Component
+  // Enhanced Modal Component for Date Selection
   const Modal = () => (
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${
@@ -371,6 +416,140 @@ export default function DownloadPhones() {
     </div>
   );
 
+  // WhatsApp Share Modal with multiple options
+  const ShareModal = () => (
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300 ${
+        showShareModal ? "bg-black/60 backdrop-blur-sm" : "bg-black/0"
+      }`}
+    >
+      <div
+        className={`bg-white rounded-2xl shadow-2xl w-full max-w-lg transform transition-all duration-300 ${
+          showShareModal
+            ? "scale-100 opacity-100 translate-y-0"
+            : "scale-95 opacity-0 translate-y-4"
+        }`}
+      >
+        {/* Modal Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 flex items-center space-x-2">
+              <FaWhatsapp className="text-green-600" />
+              <span>Share on WhatsApp</span>
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Choose the best sharing method for your device
+            </p>
+          </div>
+          <button
+            onClick={() => setShowShareModal(false)}
+            className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
+          >
+            <XMarkIcon className="h-5 w-5 text-gray-400" />
+          </button>
+        </div>
+
+        {/* Modal Body */}
+        <div className="p-6 space-y-4">
+          {/* Share Options */}
+          <div className="grid gap-3">
+            <button
+              onClick={() => tryWhatsAppShare("api")}
+              className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-green-50 hover:border-green-300 transition-all duration-200"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                  <FaWhatsapp className="text-green-600" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-medium text-gray-900">
+                    WhatsApp (Default)
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Recommended for most devices
+                  </p>
+                </div>
+              </div>
+              <ChevronDownIcon className="h-4 w-4 text-gray-400 rotate-[-90deg]" />
+            </button>
+
+            <button
+              onClick={() => tryWhatsAppShare("web")}
+              className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-blue-50 hover:border-blue-300 transition-all duration-200"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <FaWhatsapp className="text-blue-600" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-medium text-gray-900">
+                    WhatsApp Web
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Use web version of WhatsApp
+                  </p>
+                </div>
+              </div>
+              <ChevronDownIcon className="h-4 w-4 text-gray-400 rotate-[-90deg]" />
+            </button>
+
+            <button
+              onClick={() => tryWhatsAppShare("mobile")}
+              className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-purple-50 hover:border-purple-300 transition-all duration-200"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                  <FaWhatsapp className="text-purple-600" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-medium text-gray-900">
+                    Mobile App
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Open WhatsApp mobile app directly
+                  </p>
+                </div>
+              </div>
+              <ChevronDownIcon className="h-4 w-4 text-gray-400 rotate-[-90deg]" />
+            </button>
+
+            <button
+              onClick={copyToClipboard}
+              className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-200"
+            >
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
+                  <FaCopy className="text-gray-600" />
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-medium text-gray-900">
+                    Copy Message
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Copy to clipboard and paste manually
+                  </p>
+                </div>
+              </div>
+              <ChevronDownIcon className="h-4 w-4 text-gray-400 rotate-[-90deg]" />
+            </button>
+          </div>
+
+          {/* Message Preview */}
+          <div className="mt-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Message Preview:
+            </label>
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 max-h-40 overflow-y-auto">
+              <pre className="text-xs text-gray-600 whitespace-pre-wrap font-mono">
+                {shareMessage}
+              </pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div
       className={`space-y-6 transform transition-all duration-500 ${
@@ -392,6 +571,12 @@ export default function DownloadPhones() {
 
           {/* Quick Stats */}
           <div className="flex items-center space-x-4 text-sm">
+            {/* Always show sorting indicator */}
+            <span className="inline-flex items-center space-x-1 bg-green-100 text-green-700 px-3 py-1 rounded-full font-medium">
+              <FaSortAlphaDown className="text-xs" />
+              <span>District 1-12, Out station</span>
+            </span>
+
             {period !== "all" && (
               <span className="inline-flex items-center space-x-1 bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-medium">
                 <FaFilter className="text-xs" />
@@ -498,7 +683,7 @@ export default function DownloadPhones() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                     ></path>
                   </svg>
-                  <span>Sharing...</span>
+                  <span>Preparing...</span>
                 </>
               ) : (
                 <>
@@ -634,8 +819,9 @@ export default function DownloadPhones() {
         </div>
       </div>
 
-      {/* Render Modal */}
+      {/* Render Modals */}
       {showModal && <Modal />}
+      {showShareModal && <ShareModal />}
     </div>
   );
 }
