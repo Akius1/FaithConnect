@@ -19,9 +19,26 @@ interface FormData {
   district: string;
 }
 
+// District options matching the database
+const DISTRICTS = [
+  "District 1",
+  "District 2A",
+  "District 2B",
+  "District 3A",
+  "District 3B",
+  "District 4",
+  "District 5",
+  "District 7",
+  "District 8",
+  "District 9",
+  "District 10",
+  "District 11",
+  "Out Station",
+];
+
 export default function EditContact() {
   const router = useRouter();
-  const { id } = useParams(); // Extract the contact ID from the URL
+  const { id } = useParams();
   const today = new Date().toISOString().split("T")[0];
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
@@ -38,7 +55,112 @@ export default function EditContact() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [phoneError, setPhoneError] = useState("");
+  const [suggestedDistrict, setSuggestedDistrict] = useState<string | null>(
+    null
+  );
+  const [isDistrictAutoDetected, setIsDistrictAutoDetected] = useState(false);
+  const [initialAddress, setInitialAddress] = useState("");
 
+  // Auto-detect district from address
+  const detectDistrictFromAddress = (address: string): string | null => {
+    if (!address || address.trim().length < 3) return null;
+
+    const addressUpper = address.toUpperCase();
+
+    // District 1: JIBOWU, AKOKA, YABA, SABO, EBUTE-METTA, OYINGBO, FADEYI, MUSHIN
+    if (
+      /(JIBOWU|AKOKA|YABA|SABO|EBUTE.?METTA|OYINGBO|FADEYI|MUSHIN)/.test(
+        addressUpper
+      )
+    ) {
+      return "District 1";
+    }
+
+    // District 2A: SOMOLU, ONIPANU, PALM GROVE, ILUPEJU, OBANIKORO
+    if (
+      /(SOMOLU|ONIPANU|PALM.?GROVE|ILUPEJU|OBANIKORO|PALMGROVE|SHOMOLU)/.test(
+        addressUpper
+      )
+    ) {
+      return "District 2A";
+    }
+
+    // District 2B: PEDRO
+    if (/(PEDRO|BARIGA.?ROAD)/.test(addressUpper)) {
+      return "District 2B";
+    }
+
+    // District 3A: OWORONSHOKI, IFAKO, GBAGADA, ANTHONY
+    if (
+      /(OWORONSHOKI|IFAKO|GBAGADA|ANTHONY|OWORO|OWORONSOKI)/.test(addressUpper)
+    ) {
+      return "District 3A";
+    }
+
+    // District 3B: LADI-LAK, BARIGA
+    if (/(LADI.?LAK|BARIGA|ILAJE|NEW.?GARAGE|LADILAK)/.test(addressUpper)) {
+      return "District 3B";
+    }
+
+    // District 4: SURULERE, COSTAIN, IGANMU, IPORIN, STADIUM, MASHA, ADELABU
+    if (
+      /(SURULERE|COSTAIN|IGANMU|IPORIN|STADIUM|MASHA|ADELABU|KILO|AGUDA)/.test(
+        addressUpper
+      )
+    ) {
+      return "District 4";
+    }
+
+    // District 5: ITIRE, OJU-ELEGBA, LAWANSON
+    if (/(ITIRE|OJU.?ELEGBA|LAWANSON|OJUELEGBA|ISHAGA)/.test(addressUpper)) {
+      return "District 5";
+    }
+
+    // District 7: OKOTA, AJAO ESTATE, OSHODI, etc.
+    if (
+      /(OKOTA|AJAO.?ESTATE|ASWANI|OSHODI|MAFOLUKU|CEMENT|MARYLAND|CANTOMENT|CANTONMENT|NAF.?BASE|IKEJA|SHOGUNLE)/.test(
+        addressUpper
+      )
+    ) {
+      return "District 7";
+    }
+
+    // District 8: LAGOS ISLAND
+    if (/(VICTORIA.?ISLAND|BONNY.?CAMP|LAGOS.?ISLAND)/.test(addressUpper)) {
+      return "District 8";
+    }
+
+    // District 9: ABULE-EGBA, IYANA IPAJA, IJU-ISHAGA, IDIMU
+    if (
+      /(ABULE.?EGBA|IYANA.?IPAJA|IJU.?ISHAGA|IDIMU|ABORU|ALIMOSHO|BALOGUN)/.test(
+        addressUpper
+      )
+    ) {
+      return "District 9";
+    }
+
+    // District 10: ALLEN, OGBA, MAGODO, BERGER, IBAFO, MOWE, AGBADO
+    if (
+      /(ALLEN|OGBA|MAGODO|BERGER|IBAFO|MOWE|AGBADO|OJODU|ISHERI|OPIC|AREPO)/.test(
+        addressUpper
+      )
+    ) {
+      return "District 10";
+    }
+
+    // District 11: KETU, ALAKPERE, OJOTA, OGUDU, MILE 12, IKORODU
+    if (
+      /(KETU|ALAKPERE|OJOTA|OGUDU|MILE.?12|IKORODU|OWODE|ONIRIN|AGBEDE|ELEEBIJU|IKOSI)/.test(
+        addressUpper
+      )
+    ) {
+      return "District 11";
+    }
+
+    return null;
+  };
+
+  // Fetch contact data on mount
   useEffect(() => {
     async function fetchContact() {
       try {
@@ -47,22 +169,22 @@ export default function EditContact() {
           throw new Error("Failed to fetch contact");
         }
         const data = await res.json();
-        // Populate the form with the fetched contact data.
-        // Ensure contactDate is formatted as YYYY-MM-DD.
-        setFormData({
-          firstName: data.firstName,
-          lastName: data.lastName,
-          address: data.address,
-          phone: data.phone,
-          prayerPoint: data.prayerPoint,
-          contactType: data.contactType,
-          serviceType: data.serviceType,
+        const contactData = {
+          firstName: data.firstName || "",
+          lastName: data.lastName || "",
+          address: data.address || "",
+          phone: data.phone || "",
+          prayerPoint: data.prayerPoint || "",
+          contactType: data.contactType || "",
+          serviceType: data.serviceType || "",
           gender: data.gender || "",
           district: data.district || "",
           contactDate: data.contactDate
             ? data.contactDate.split("T")[0]
             : today,
-        });
+        };
+        setFormData(contactData);
+        setInitialAddress(data.address || "");
       } catch (error) {
         console.error("Error fetching contact:", error);
         toast.error("Failed to load contact details");
@@ -75,15 +197,41 @@ export default function EditContact() {
     }
   }, [id, today]);
 
+  // Watch address changes and auto-detect district
+  useEffect(() => {
+    // Only auto-detect if address has changed from initial value
+    if (formData.address && formData.address !== initialAddress) {
+      const detected = detectDistrictFromAddress(formData.address);
+
+      if (detected) {
+        setSuggestedDistrict(detected);
+
+        // Only auto-fill if user hasn't manually selected a different district
+        if (!formData.district || isDistrictAutoDetected) {
+          setFormData((prev) => ({ ...prev, district: detected }));
+          setIsDistrictAutoDetected(true);
+        }
+      } else {
+        setSuggestedDistrict(null);
+      }
+    }
+  }, [formData.address, initialAddress]);
+
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+
+    // If user manually changes district, mark it as manual selection
+    if (name === "district") {
+      setIsDistrictAutoDetected(false);
+    }
+
+    setFormData({ ...formData, [name]: value });
   };
 
-  // Restrict phone input to digits only
   const handlePhoneKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const charCode = e.charCode;
     if (charCode < 48 || charCode > 57) {
@@ -91,7 +239,6 @@ export default function EditContact() {
     }
   };
 
-  // Validates Nigerian phone numbers (e.g., 08012345678)
   const validateNigeriaPhoneNumber = (phone: string) => {
     const regex = /^0[7-9]\d{9}$/;
     return regex.test(phone);
@@ -117,20 +264,24 @@ export default function EditContact() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
+
       if (!res.ok) {
-        throw new Error("Update failed");
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Update failed");
       }
+
       toast.success("Contact updated successfully!");
       router.push("/dashboard");
     } catch (error) {
       console.error("Error updating contact:", error);
-      toast.error("Failed to update contact");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update contact"
+      );
     } finally {
       setUpdating(false);
     }
   };
 
-  // Disable submit button if phone number or date is not filled
   const isDisabled = !formData.phone.trim() || !formData.contactDate.trim();
 
   if (loading)
@@ -173,14 +324,12 @@ export default function EditContact() {
         <title>Edit Contact - Faith Connect</title>
         <meta
           name="description"
-          content="Edit your contact details in Faith Connect. Update your name, address, phone number, prayer point, contact type, service type, gender, district and date."
+          content="Edit contact details in Faith Connect with auto-district detection."
         />
         <link rel="canonical" href={`/edit/${id}`} />
       </Head>
 
-      {/* Toast Container */}
       <Toaster position="top-right" />
-
       <Header appName="Edit Contact" />
 
       <div className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100">
@@ -226,7 +375,7 @@ export default function EditContact() {
                 />
               </div>
 
-              {/* Address */}
+              {/* Address with Auto-Detection */}
               <div>
                 <label
                   htmlFor="address"
@@ -240,8 +389,27 @@ export default function EditContact() {
                   id="address"
                   value={formData.address}
                   onChange={handleChange}
+                  placeholder="Enter address to auto-detect district"
                   className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
+                {suggestedDistrict &&
+                  isDistrictAutoDetected &&
+                  formData.address !== initialAddress && (
+                    <p className="text-xs text-green-600 mt-1 flex items-center">
+                      <svg
+                        className="w-4 h-4 mr-1"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      District auto-detected: {suggestedDistrict}
+                    </p>
+                  )}
               </div>
 
               {/* Phone Number */}
@@ -262,6 +430,7 @@ export default function EditContact() {
                   inputMode="numeric"
                   pattern="^0[7-9]\d{9}$"
                   required
+                  placeholder="08012345678"
                   className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                 />
                 {phoneError && (
@@ -269,7 +438,7 @@ export default function EditContact() {
                 )}
               </div>
 
-              {/* Two Select Fields in a Row for Contact Type and Service Type */}
+              {/* Contact Type and Service Type */}
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1">
                   <label
@@ -317,7 +486,7 @@ export default function EditContact() {
                 </div>
               </div>
 
-              {/* Two Select Fields in a Row for Gender and District */}
+              {/* Gender and District */}
               <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1">
                   <label
@@ -336,7 +505,6 @@ export default function EditContact() {
                     <option value="">Select Gender</option>
                     <option value="male">Male</option>
                     <option value="female">Female</option>
-                    <option value="other">Other</option>
                   </select>
                 </div>
                 <div className="flex-1">
@@ -344,7 +512,10 @@ export default function EditContact() {
                     htmlFor="district"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    District
+                    District{" "}
+                    {isDistrictAutoDetected && (
+                      <span className="text-xs text-green-600">(Auto)</span>
+                    )}
                   </label>
                   <select
                     name="district"
@@ -354,12 +525,11 @@ export default function EditContact() {
                     className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400"
                   >
                     <option value="">Select District</option>
-                    {Array.from({ length: 12 }, (_, i) => (
-                      <option key={i} value={`District ${i + 1}`}>
-                        District {i + 1}
+                    {DISTRICTS.map((district) => (
+                      <option key={district} value={district}>
+                        {district}
                       </option>
                     ))}
-                    <option value="Out Station">Out Station</option>
                   </select>
                 </div>
               </div>
@@ -397,6 +567,7 @@ export default function EditContact() {
                   value={formData.prayerPoint}
                   onChange={handleChange}
                   rows={4}
+                  placeholder="Enter prayer requests..."
                   className="mt-1 w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 resize-none"
                 />
               </div>
