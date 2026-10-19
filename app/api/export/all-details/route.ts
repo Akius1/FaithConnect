@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { contactScopeFilter, requireCounsellor } from "@/src/lib/access";
+import { getSupabase, selectAll } from "@/src/lib/supabase";
 import ExcelJS from "exceljs";
 import {
   startOfDay,
@@ -12,14 +13,11 @@ import {
   endOfYear,
 } from "date-fns";
 
-// Ensure these environment variables are set
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 export async function GET(request: NextRequest) {
   try {
+    const guard = await requireCounsellor();
+    if (guard.error) return guard.error;
     const { searchParams } = request.nextUrl;
 
     // Retrieve query parameters
@@ -27,7 +25,10 @@ export async function GET(request: NextRequest) {
     const search = searchParams.get("search") || "";
 
     // Build a base query from the "contacts" table
-    let query = supabase.from("contacts").select("*");
+    let query = getSupabase().from("contacts").select("*");
+    // Counsellors only export the contacts they can see.
+    const scope = await contactScopeFilter(guard.access);
+    if (scope) query = query.or(scope);
 
     // Optional filtering by phone
     if (search) {
@@ -86,9 +87,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Execute the query
-    const { data, error } = await query;
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    // Page past PostgREST's 1000-row cap; the builder re-runs on each await.
+    const ordered = query.order("id", { ascending: true });
+    let data;
+    try {
+      data = await selectAll((from, to) => ordered.range(from, to));
+    } catch (error) {
+      return NextResponse.json({ error: (error as Error).message }, { status: 500 });
     }
 
     // Create an Excel workbook and worksheet

@@ -2,19 +2,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // app/api/statistics/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabase } from "@/src/lib/supabase";
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-  throw new Error("Missing Supabase environment variables.");
-}
-
-// Supabase Admin Client
-const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
-  auth: { persistSession: false },
-});
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,13 +20,13 @@ export async function GET(request: NextRequest) {
     console.log('Applied filters:', parsedFilters);
     
     // Apply filters to SQL queries
-    const timeSeriesQuery = supabase.rpc('get_contact_trends', {
+    const timeSeriesQuery = getSupabase().rpc('get_contact_trends', {
       start_date: dateRange.start,
       end_date: dateRange.end,
       period_type: period
     });
     
-    const distributionQuery = supabase.rpc('get_contact_distributions', {
+    const distributionQuery = getSupabase().rpc('get_contact_distributions', {
       start_date: dateRange.start,
       end_date: dateRange.end
     });
@@ -45,7 +34,7 @@ export async function GET(request: NextRequest) {
     // If we have filters, we need to get filtered data manually
     if (hasActiveFilters(parsedFilters)) {
       // Get filtered contacts first
-      let contactQuery = supabase
+      let contactQuery = getSupabase()
         .from('contacts')
         .select('*')
         .gte('createdAt', dateRange.start)
@@ -106,7 +95,7 @@ export async function GET(request: NextRequest) {
     
     // 3. Get period comparison metrics using get_period_comparison function
     const previousDateRange = getPreviousDateRange(period);
-    const { data: comparisonData, error: comparisonError } = await supabase.rpc('get_period_comparison', {
+    const { data: comparisonData, error: comparisonError } = await getSupabase().rpc('get_period_comparison', {
       current_start: getCurrentPeriodStart(period),
       current_end: dateRange.end,
       previous_start: previousDateRange.start,
@@ -119,7 +108,7 @@ export async function GET(request: NextRequest) {
     }
     
     // 4. Get dashboard summary using get_dashboard_summary function
-    const { data: summaryData, error: summaryError } = await supabase.rpc('get_dashboard_summary', {
+    const { data: summaryData, error: summaryError } = await getSupabase().rpc('get_dashboard_summary', {
       start_date: dateRange.start,
       end_date: dateRange.end
     });

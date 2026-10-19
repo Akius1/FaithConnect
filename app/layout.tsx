@@ -1,12 +1,13 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
+import { clerkAppearance, clerkLocalization } from "@/src/lib/clerkAppearance";
 
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 const geistMono = Geist_Mono({
@@ -15,8 +16,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Faith-Connect-Plus",
+  title: "Faith Connect",
   description: "Follow up app",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#4338ca",
 };
 
 export default function RootLayout({
@@ -25,14 +32,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-         <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
-        {children}
-        </ClerkProvider>
-      </body>
-    </html>
+    <ClerkProvider
+      appearance={clerkAppearance}
+      localization={clerkLocalization}
+      signInUrl="/login"
+      signUpUrl="/sign-up"
+      signInFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/dashboard"
+      afterSignOutUrl="/login"
+    >
+      <html lang="en">
+        <body className={`${jakarta.variable} ${geistMono.variable} font-sans antialiased`}>
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
