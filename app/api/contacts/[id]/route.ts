@@ -1,18 +1,9 @@
 // app/api/contacts/[id]/route.ts
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { canSeeContact, requireAdmin, requireCounsellor } from "@/src/lib/access";
+import { getSupabase } from "@/src/lib/supabase";
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-  throw new Error("Missing Supabase environment variables.");
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
-  auth: { persistSession: false },
-});
 
 // Valid district values
 const VALID_DISTRICTS = [
@@ -37,9 +28,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const guard = await requireCounsellor();
+    if (guard.error) return guard.error;
     const { id } = await params;
+    if (!(await canSeeContact(guard.access, id))) {
+      return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+    }
     
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from("contacts")
       .select("*")
       .eq("id", id)
@@ -76,7 +72,12 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const guard = await requireCounsellor();
+    if (guard.error) return guard.error;
     const { id } = await params;
+    if (!(await canSeeContact(guard.access, id))) {
+      return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+    }
     const body = await request.json();
 
     // Validate required fields
@@ -118,7 +119,7 @@ export async function PUT(
       district: body.district || null,
     };
 
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from("contacts")
       .update(updateData)
       .eq("id", id)
@@ -161,10 +162,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const guard = await requireAdmin();
+    if (guard.error) return guard.error;
     const { id } = await params;
 
     // First, delete related feedback rows to avoid foreign key violation
-    const { error: feedbackError } = await supabase
+    const { error: feedbackError } = await getSupabase()
       .from("feedback")
       .delete()
       .eq("contact_id", id);
@@ -178,7 +181,7 @@ export async function DELETE(
     }
 
     // Now, delete the contact
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from("contacts")
       .delete()
       .eq("id", id)

@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Faith Connect
 
-## Getting Started
+Follow-up platform for first timers and new converts: counsellors record
+feedback round by round and track each person through foundation class until
+they are planted.
 
-First, run the development server:
+Built with Next.js 15 (App Router), Clerk for sign-in and Supabase (Postgres).
+
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Create `.env.local` with:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Variable | What it is |
+| --- | --- |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` | Clerk keys |
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Supabase project URL and service role key (server only) |
+| `SUPER_ADMIN_EMAILS` | Comma-separated emails made super admin when they sign in |
+| `TERMII_API_KEY`, `TERMII_SENDER_ID`, `TERMII_BASE_URL`, `TERMII_CHANNEL` | Bulk SMS through Termii (optional) |
+| `NEXT_PUBLIC_CHURCH_WHATSAPP_LINK` | Link used in the "WhatsApp invite" message preset (optional) |
+| `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_TEMPLATE_NAME`, `WHATSAPP_TEMPLATE_LANG` | Automatic WhatsApp through Meta's Cloud API (optional) |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Database
 
-## Learn More
+Run the files in `supabase/migrations/` in order in the Supabase SQL editor.
+They are safe to run more than once.
 
-To learn more about Next.js, take a look at the following resources:
+## Roles
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Super admin**: sees every contact, assigns contacts to counsellors, manages
+  counsellors and can send bulk messages to anyone.
+- **Counsellor**: sees the contacts assigned to them and anyone they have
+  followed up, can message any single person, and can send bulk messages to the
+  people assigned to them.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## WhatsApp webhook
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+When the Cloud API is set up, point the Meta webhook at
+`https://<your-domain>/api/webhooks/whatsapp` with `WHATSAPP_VERIFY_TOKEN` as
+the verify token and subscribe to `messages`. Delivery reports mark each
+contact as on or not on WhatsApp.

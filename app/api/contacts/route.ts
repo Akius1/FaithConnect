@@ -1,19 +1,9 @@
 // app/api/contacts/route.ts
 
 import { NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { canSeeContact, contactScopeFilter, requireAdmin, requireCounsellor } from "@/src/lib/access";
+import { getSupabase, selectAll } from "@/src/lib/supabase";
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-  throw new Error("Missing Supabase environment variables.");
-}
-
-// Supabase Admin Client
-const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
-  auth: { persistSession: false },
-});
 
 // Valid district values
 const VALID_DISTRICTS = [
@@ -34,6 +24,8 @@ const VALID_DISTRICTS = [
 
 export async function POST(request: Request) {
   try {
+    const guard = await requireCounsellor();
+    if (guard.error) return guard.error;
     const {
       firstName,
       lastName,
@@ -73,7 +65,7 @@ export async function POST(request: Request) {
     }
 
     // Prepare data for insertion
-    const contactData = {
+    const contactData: Record<string, unknown> = {
       firstName: firstName?.trim() || null,
       lastName: lastName?.trim() || null,
       address: address?.trim() || null,
@@ -85,9 +77,18 @@ export async function POST(request: Request) {
       gender: gender || null,
       district: district || null, // Will be auto-assigned by trigger if null
     };
+    // A counsellor who adds someone becomes that person's counsellor.
+    const { counsellor, isAdmin, legacy } = guard.access;
+    if (!legacy && !isAdmin && counsellor) {
+      Object.assign(contactData, {
+        assigned_counsellor_id: counsellor.id,
+        assigned_at: new Date().toISOString(),
+        assigned_by: counsellor.id,
+      });
+    }
 
     // Insert into Supabase
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from("contacts")
       .insert([contactData])
       .select();
@@ -118,6 +119,8 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
+    const guard = await requireCounsellor();
+    if (guard.error) return guard.error;
     const { searchParams } = new URL(request.url);
     const district = searchParams.get("district");
     const contactType = searchParams.get("contactType");
@@ -125,38 +128,50 @@ export async function GET(request: Request) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
-    let query = supabase
-      .from("contacts")
-      .select("*")
-      .order("contactDate", { ascending: false });
+    const scope = await contactScopeFilter(guard.access);
+    const buildQuery = (from: number, to: number) => {
+      let query = getSupabase()
+        .from("contacts")
+        .select("*, feedback(count)")
+        .order("contactDate", { ascending: false })
+        .order("id", { ascending: true })
+        .range(from, to);
 
-    // Apply filters if provided
-    if (district && district !== "all") {
-      query = query.eq("district", district);
-    }
+      if (scope) {
+        query = query.or(scope);
+      }
+      if (district && district !== "all") {
+        query = query.eq("district", district);
+      }
+      if (contactType && contactType !== "all") {
+        query = query.eq("contactType", contactType);
+      }
+      if (serviceType && serviceType !== "all") {
+        query = query.eq("serviceType", serviceType);
+      }
+      if (startDate) {
+        query = query.gte("contactDate", startDate);
+      }
+      if (endDate) {
+        query = query.lte("contactDate", endDate);
+      }
+      return query;
+    };
 
-    if (contactType && contactType !== "all") {
-      query = query.eq("contactType", contactType);
-    }
-
-    if (serviceType && serviceType !== "all") {
-      query = query.eq("serviceType", serviceType);
-    }
-
-    if (startDate) {
-      query = query.gte("contactDate", startDate);
-    }
-
-    if (endDate) {
-      query = query.lte("contactDate", endDate);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
+    let data;
+    try {
+      const rows = await selectAll<Record<string, unknown> & { feedback?: { count: number }[] }>(
+        buildQuery
+      );
+      // Flatten PostgREST's [{ count }] into a plain number.
+      data = rows.map(({ feedback, ...contact }) => ({
+        ...contact,
+        feedbackCount: feedback?.[0]?.count ?? 0,
+      }));
+    } catch (error) {
       console.error("Supabase fetch error:", error);
       return NextResponse.json(
-        { error: error.message },
+        { error: (error as Error).message },
         { status: 500 }
       );
     }
@@ -174,13 +189,30 @@ export async function GET(request: Request) {
 // Optional: Add PUT endpoint for updates
 export async function PUT(request: Request) {
   try {
-    const { id, ...updateData } = await request.json();
+    const guard = await requireCounsellor();
+    if (guard.error) return guard.error;
+    const {
+      id,
+      // Assignment and WhatsApp status are only changed by their own endpoints.
+      /* eslint-disable @typescript-eslint/no-unused-vars */
+      assigned_counsellor_id,
+      assigned_at,
+      assigned_by,
+      whatsapp_status,
+      whatsapp_checked_at,
+      /* eslint-enable @typescript-eslint/no-unused-vars */
+      ...updateData
+    } = await request.json();
 
     if (!id) {
       return NextResponse.json(
         { error: "Contact ID is required" },
         { status: 400 }
       );
+    }
+
+    if (!(await canSeeContact(guard.access, id))) {
+      return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
 
     // Validate district if being updated
@@ -191,7 +223,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from("contacts")
       .update(updateData)
       .eq("id", id)
@@ -231,6 +263,8 @@ export async function PUT(request: Request) {
 // Optional: Add DELETE endpoint
 export async function DELETE(request: Request) {
   try {
+    const guard = await requireAdmin();
+    if (guard.error) return guard.error;
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
@@ -241,7 +275,7 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const { error } = await supabase
+    const { error } = await getSupabase()
       .from("contacts")
       .delete()
       .eq("id", id);

@@ -1,31 +1,50 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
-
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-  throw new Error("Missing Supabase environment variables.");
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
+import { currentUser } from "@clerk/nextjs/server";
+import { canSeeContact, requireCounsellor } from "@/src/lib/access";
+import { getSupabase } from "@/src/lib/supabase";
+import { isFoundationStage } from "@/src/lib/constants";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    // Expect body to contain: contact_id, feedback, counselor, date_created
-    const { contact_id, feedback, initiator, date_created } = body;
+    const guard = await requireCounsellor();
+    if (guard.error) return guard.error;
 
-    if (!contact_id || !feedback || !initiator || !date_created) {
+    const { contact_id, feedback, date_created, foundation_stage } = await request.json();
+
+    if (!contact_id || !feedback?.trim() || !date_created) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
       );
     }
+    if (foundation_stage != null && !isFoundationStage(foundation_stage)) {
+      return NextResponse.json({ error: "Unknown foundation class stage" }, { status: 400 });
+    }
+    if (!(await canSeeContact(guard.access, contact_id))) {
+      return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+    }
 
-    const { data, error } = await supabase
+    // The counsellor is whoever is signed in, not a name typed into the form.
+    const { counsellor } = guard.access;
+    let initiator = counsellor?.full_name ?? counsellor?.email ?? null;
+    if (!initiator) {
+      const user = await currentUser();
+      initiator =
+        user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? "Counsellor";
+    }
+
+    const row: Record<string, unknown> = {
+      contact_id,
+      feedback: feedback.trim(),
+      initiator,
+      date_created,
+    };
+    if (counsellor) row.counsellor_id = counsellor.id;
+    if (foundation_stage) row.foundation_stage = foundation_stage;
+
+    const { data, error } = await getSupabase()
       .from("feedback")
-      .insert([{ contact_id, feedback, initiator, date_created }])
+      .insert([row])
       .select("*")
       .single();
 
@@ -34,14 +53,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // The stage picked with the feedback becomes the contact's current stage.
+    if (foundation_stage) {
+      const { error: stageError } = await getSupabase()
+        .from("contacts")
+        .update({
+          foundation_stage,
+          foundation_stage_updated_at: new Date().toISOString(),
+          foundation_stage_updated_by: counsellor?.id ?? null,
+        })
+        .eq("id", contact_id);
+      if (stageError) console.error("Error updating foundation stage:", stageError);
+    }
+
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
     console.error("Error in POST feedback endpoint:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
-
-
-
-  
- 

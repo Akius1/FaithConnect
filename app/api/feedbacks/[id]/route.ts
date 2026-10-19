@@ -1,23 +1,21 @@
 import {  NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { canSeeContact, requireCounsellor } from "@/src/lib/access";
+import { getSupabase } from "@/src/lib/supabase";
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !supabaseServiceRoleKey) {
-  throw new Error("Missing Supabase environment variables.");
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const guard = await requireCounsellor();
+    if (guard.error) return guard.error;
     const { id } = await params;
+    if (!(await canSeeContact(guard.access, id))) {
+      return NextResponse.json({ error: "Contact not found" }, { status: 404 });
+    }
     // Try using "feedbacks" instead of "feedback"
-    const { data, error } = await supabase
+    const { data, error } = await getSupabase()
       .from("contacts")
       .select("*, feedback(*)")
       .eq("id", id)
