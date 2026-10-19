@@ -12,6 +12,7 @@ import {
   ShieldCheckIcon,
 } from "@heroicons/react/24/outline";
 import Header from "@/src/components/Header";
+import PendingLists from "./PendingLists";
 
 interface Counsellor {
   id: string;
@@ -146,6 +147,8 @@ export default function CounsellorsList({ meId }: { meId: string | null }) {
             ))}
           </section>
         )}
+
+        <PendingLists counsellors={list.filter((c) => c.is_active)} onChanged={load} />
 
         <section className="rounded-3xl border border-gray-200/80 bg-white shadow-sm">
           <div className="flex flex-col gap-3 border-b border-gray-100 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">

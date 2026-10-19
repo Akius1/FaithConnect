@@ -96,11 +96,34 @@ export async function syncCounsellor(): Promise<Counsellor | null> {
       .select("*")
       .single();
     if (error) throw new Error(error.message);
-    return data as Counsellor;
+    const counsellor = data as Counsellor;
+    if (counsellor.email) await claimPendingAssignments(counsellor.id, counsellor.email);
+    return counsellor;
   } catch (err) {
     console.error("Counsellor sync failed:", err);
     return null;
   }
+}
+
+// Contacts set aside for this email (pending_assignments) become theirs.
+// People already assigned to someone else are left alone.
+export async function claimPendingAssignments(counsellorId: string, email: string) {
+  const supabase = getSupabase();
+  const { data: pending, error } = await supabase
+    .from("pending_assignments")
+    .select("contact_id")
+    .ilike("counsellor_email", email);
+  if (error || !pending?.length) return 0;
+
+  const ids = pending.map((p) => p.contact_id);
+  const { data: assigned } = await supabase
+    .from("contacts")
+    .update({ assigned_counsellor_id: counsellorId, assigned_at: new Date().toISOString() })
+    .in("id", ids)
+    .is("assigned_counsellor_id", null)
+    .select("id");
+  await supabase.from("pending_assignments").delete().in("contact_id", ids);
+  return assigned?.length ?? 0;
 }
 
 // Google only shares a birthday when the Clerk Google connection requests the
