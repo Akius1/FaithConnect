@@ -508,7 +508,7 @@ export default function FollowUp() {
         </section>
       </div>
       {canAssign && selected.size > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-40 p-3 md:left-64 md:p-5">
+        <div className="fixed inset-x-0 bottom-0 z-40 p-3 md:left-64 md:p-5 lg:left-72">
           <div className="fc-rise mx-auto flex max-w-3xl flex-col gap-3 rounded-3xl bg-gray-900 p-4 text-white shadow-2xl sm:flex-row sm:items-center">
             <div className="flex items-center justify-between gap-3 sm:justify-start">
               <span className="text-sm font-semibold">
@@ -561,7 +561,7 @@ export default function FollowUp() {
 function FilterRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col md:flex-row md:items-start gap-2">
-      <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 md:w-20 md:pt-2 flex-shrink-0">
+      <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 md:w-28 md:pt-2 flex-shrink-0">
         {label}
       </span>
       {/* One scrolling line on phones, wrapping on wider screens. */}

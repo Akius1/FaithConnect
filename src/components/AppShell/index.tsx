@@ -40,7 +40,7 @@ export default function AppShell({
     <Context.Provider value={{ openSidebar: () => setSidebarOpen(true), viewer }}>
       <div className="min-h-dvh bg-gray-100">
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} viewer={viewer} />
-        <main className="md:pl-64 min-h-dvh min-w-0">
+        <main className="md:pl-64 lg:pl-72 min-h-dvh min-w-0">
           {viewer.legacy && (
             <div className="border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-900 sm:px-6 lg:px-8">
               <span className="font-semibold">Setup needed:</span> run the Supabase migration to turn on

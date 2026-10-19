@@ -1,18 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { clerkAppearance, clerkLocalization } from "@/src/lib/clerkAppearance";
 
-const jakarta = Plus_Jakarta_Sans({
+// Bundled with the app (OFL licence in app/fonts) so builds never depend on
+// downloading from Google Fonts.
+const jakarta = localFont({
+  src: "./fonts/PlusJakartaSans-Variable.woff2",
   variable: "--font-jakarta",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: "200 800",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -42,7 +40,7 @@ export default function RootLayout({
       afterSignOutUrl="/login"
     >
       <html lang="en">
-        <body className={`${jakarta.variable} ${geistMono.variable} font-sans antialiased`}>
+        <body className={`${jakarta.variable} font-sans antialiased`}>
           {children}
         </body>
       </html>
