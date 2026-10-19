@@ -14,7 +14,6 @@ export default {
   	extend: {
        fontFamily: {
         sans: ["var(--font-jakarta)", "system-ui", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "monospace"],
       },
        animation: {
         'slide-in': 'slideIn 0.3s ease-out',

@@ -56,7 +56,7 @@ export default function Sidebar({ open, onClose, viewer }: SidebarProps) {
   return (
     <>
       {/* Desktop */}
-      <aside className="hidden md:flex md:flex-col w-64 bg-gradient-to-br from-indigo-700 to-blue-600 shadow-xl fixed inset-y-0 left-0 z-20">
+      <aside className="hidden md:flex md:flex-col md:w-64 lg:w-72 bg-gradient-to-br from-indigo-700 to-blue-600 shadow-xl fixed inset-y-0 left-0 z-20">
         <SidebarBody pathname={pathname} viewer={viewer} />
       </aside>
 

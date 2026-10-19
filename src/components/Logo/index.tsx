@@ -51,7 +51,7 @@ export default function Logo({
           Faith<span className={tone === "light" ? "text-amber-300" : "text-indigo-600"}>Connect</span>
         </span>
         <span
-          className={`mt-1 block text-[10px] font-semibold uppercase tracking-[0.2em] ${
+          className={`mt-1 block whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.12em] ${
             tone === "light" ? "text-indigo-200" : "text-gray-400"
           }`}
         >
