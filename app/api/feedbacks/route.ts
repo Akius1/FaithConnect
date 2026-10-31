@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     if (foundation_stage != null && !isFoundationStage(foundation_stage)) {
       return NextResponse.json({ error: "Unknown foundation class stage" }, { status: 400 });
     }
-    if (!(await canSeeContact(guard.access, contact_id))) {
+    if (!(await canSeeContact())) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
 

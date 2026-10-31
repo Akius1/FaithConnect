@@ -69,7 +69,10 @@ interface OverviewProps {
 export default function Overview({ contacts, loading }: OverviewProps) {
   const { user } = useUser();
   const viewer = useViewer();
-  const mine = !viewer.isAdmin && !viewer.legacy;
+  const isCounsellor = !viewer.isAdmin && !viewer.legacy && !!viewer.counsellorId;
+  const assignedToMe = isCounsellor
+    ? contacts.filter((c) => c.assigned_counsellor_id === viewer.counsellorId).length
+    : 0;
   const [now] = useState(() => new Date());
 
   const stats = useMemo(() => {
@@ -170,9 +173,7 @@ export default function Overview({ contacts, loading }: OverviewProps) {
               ) : awaiting ? (
                 <>
                   <span className="font-bold text-white">{awaiting.toLocaleString()}</span>{" "}
-                  {mine
-                    ? `of your contacts ${awaiting === 1 ? "is" : "are"} still waiting for a first`
-                    : awaiting === 1
+                  {awaiting === 1
                     ? "person is still waiting for their first"
                     : "people are still waiting for their first"}{" "}
                   follow-up call
@@ -183,12 +184,21 @@ export default function Overview({ contacts, loading }: OverviewProps) {
                   ) : null}
                   .
                 </>
-              ) : mine && stats.total === 0 ? (
-                "No one has been assigned to you yet. New people will show up here once the admin assigns them."
               ) : (
                 "Everyone has had at least one follow-up. Well done."
               )}
             </p>
+            {isCounsellor && !loading && (
+              <Link
+                href="/follow-up?mine=assigned"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-sm font-semibold text-white ring-1 ring-white/20 transition-colors hover:bg-white/25"
+              >
+                {assignedToMe
+                  ? `${assignedToMe} ${assignedToMe === 1 ? "person is" : "people are"} assigned to you`
+                  : "No one is assigned to you yet"}
+                <ArrowRightIcon className="h-4 w-4" />
+              </Link>
+            )}
           </div>
           <div className="flex flex-shrink-0 flex-col gap-2.5 sm:flex-row">
             <Link
@@ -214,7 +224,7 @@ export default function Overview({ contacts, loading }: OverviewProps) {
       <section className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <StatCard
           delay={0.05}
-          label={mine ? "My contacts" : "Total contacts"}
+          label="Total contacts"
           value={stats.total}
           loading={loading}
           icon={UserGroupIcon}

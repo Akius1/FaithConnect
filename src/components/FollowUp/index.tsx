@@ -127,6 +127,13 @@ export default function FollowUp() {
   const [assignTo, setAssignTo] = useState("");
   const [assigning, setAssigning] = useState(false);
 
+  // Opened from the dashboard with ?mine=assigned.
+  useEffect(() => {
+    if (!isCounsellorView) return;
+    const mine = new URLSearchParams(window.location.search).get("mine");
+    if (mine === "assigned" || mine === "followed") setOwner(mine);
+  }, [isCounsellorView]);
+
   useEffect(() => {
     if (!canAssign) return;
     // Opened from the Counsellors page with ?counsellor=<id>.
@@ -324,9 +331,9 @@ export default function FollowUp() {
             </FilterRow>
           )}
           {isCounsellorView && (
-            <FilterRow label="Mine">
+            <FilterRow label="Show">
               <Chip active={owner === "all"} onClick={() => setOwner("all")}>
-                All my contacts
+                Everyone
               </Chip>
               <Chip active={owner === "assigned"} onClick={() => setOwner("assigned")}>
                 Assigned to me
@@ -445,7 +452,7 @@ export default function FollowUp() {
                         />
                       )}
                       <div className="min-w-0 flex-1">
-                        <ContactCard contact={c} showOwner={!isCounsellorView} />
+                        <ContactCard contact={c} showOwner />
                       </div>
                     </div>
                   </li>
@@ -473,7 +480,7 @@ export default function FollowUp() {
                       <th className="px-5 py-3">Service</th>
                       <th className="px-5 py-3 hidden lg:table-cell">District</th>
                       <th className="px-5 py-3">Added</th>
-                      {!isCounsellorView && <th className="px-5 py-3">Counsellor</th>}
+                      <th className="px-5 py-3">Counsellor</th>
                       <th className="px-5 py-3">Last feedback</th>
                       <th className="px-5 py-3 text-right">Actions</th>
                     </tr>
@@ -483,7 +490,7 @@ export default function FollowUp() {
                       <ContactRow
                         key={c.id}
                         contact={c}
-                        showOwner={!isCounsellorView}
+                        showOwner
                         selectable={canAssign}
                         selected={selected.has(c.id)}
                         onToggle={() => toggle(c.id)}
