@@ -17,7 +17,7 @@ export async function PATCH(
   if (!isFoundationStage(stage)) {
     return NextResponse.json({ error: "Unknown foundation class stage" }, { status: 400 });
   }
-  if (!(await canSeeContact(guard.access, id))) {
+  if (!(await canSeeContact())) {
     return NextResponse.json({ error: "Contact not found" }, { status: 404 });
   }
 

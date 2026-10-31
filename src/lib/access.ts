@@ -2,7 +2,6 @@ import "server-only";
 import { cache } from "react";
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { getSupabase } from "./supabase";
 import { getCounsellorByClerkId, syncCounsellor, type Counsellor } from "./counsellor";
 
 export interface Access {
@@ -59,38 +58,14 @@ export async function requireAdmin(): Promise<Guard> {
   return guard;
 }
 
-// Ids of contacts a counsellor has written feedback for.
-async function followedUpContactIds(counsellorId: string): Promise<number[]> {
-  const { data, error } = await getSupabase()
-    .from("feedback")
-    .select("contact_id")
-    .eq("counsellor_id", counsellorId);
-  if (error) throw new Error(error.message);
-  return [...new Set((data ?? []).map((r) => Number(r.contact_id)))];
+// Every active counsellor can see every contact (dashboard, follow-up,
+// foundation class). What stays admin-only (assigning, deleting, managing
+// counsellors, reports, bulk messages to anyone) is guarded where it happens.
+// Kept as functions so a narrower rule can be brought back in one place.
+export async function contactScopeFilter(): Promise<string | null> {
+  return null;
 }
 
-// PostgREST "or" filter limiting contacts to what this counsellor may see:
-// assigned to them, or followed up by them. Null means no limit.
-export async function contactScopeFilter(access: Access): Promise<string | null> {
-  if (access.isAdmin || !access.counsellor) return null;
-  const ids = await followedUpContactIds(access.counsellor.id);
-  const parts = [`assigned_counsellor_id.eq.${access.counsellor.id}`];
-  if (ids.length) parts.push(`id.in.(${ids.join(",")})`);
-  return parts.join(",");
-}
-
-export async function canSeeContact(access: Access, contactId: string | number): Promise<boolean> {
-  if (access.isAdmin || !access.counsellor) return true;
-  const { data } = await getSupabase()
-    .from("contacts")
-    .select("assigned_counsellor_id")
-    .eq("id", contactId)
-    .maybeSingle();
-  if (data?.assigned_counsellor_id === access.counsellor.id) return true;
-  const { count } = await getSupabase()
-    .from("feedback")
-    .select("id", { count: "exact", head: true })
-    .eq("contact_id", contactId)
-    .eq("counsellor_id", access.counsellor.id);
-  return (count ?? 0) > 0;
+export async function canSeeContact(): Promise<boolean> {
+  return true;
 }

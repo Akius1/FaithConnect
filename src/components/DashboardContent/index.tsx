@@ -13,7 +13,6 @@ import {
 import Header from "@/src/components/Header";
 import DownloadPhones from "@/src/components/DownloadPhoneNumber";
 import Overview from "./Overview";
-import { useViewer } from "@/src/components/AppShell";
 import ContactsTable from "./ContactsTable";
 import DeleteConfirmationModal from "./DeleteConfirmationModal";
 import CustomDateFilterModal from "./CustomDateFilterModal";
@@ -32,6 +31,7 @@ export interface Entry {
   contactDate: Date;
   createdAt: Date;
   feedbackCount: number;
+  assigned_counsellor_id?: string | null;
 }
 
 type RawEntry = Omit<Entry, "contactDate" | "createdAt" | "feedbackCount"> & {
@@ -86,8 +86,6 @@ function inPeriod(entry: Entry, period: Period, start: string, end: string, now:
 }
 
 export default function Dashboard() {
-  const viewer = useViewer();
-  const mine = !viewer.isAdmin && !viewer.legacy;
   const [contacts, setContacts] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -207,9 +205,7 @@ export default function Dashboard() {
           <div className="space-y-4 border-b border-gray-100 p-4 sm:p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h2 className="text-lg font-bold text-gray-900">
-                  {mine ? "My contacts" : "All contacts"}
-                </h2>
+                <h2 className="text-lg font-bold text-gray-900">All contacts</h2>
                 <p className="text-sm text-gray-500">
                   {loading
                     ? "Loading..."
