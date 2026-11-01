@@ -12,8 +12,10 @@ create table if not exists public.pending_assignments (
 create index if not exists pending_assignments_email_idx on public.pending_assignments (lower(counsellor_email));
 alter table public.pending_assignments enable row level security;
 
--- Lists shared on WhatsApp (October 2026). A person on two lists stays with
--- the first one. Bro Andrew Urom's list was assigned directly.
+-- Lists shared on WhatsApp (October 2026), matched by phone. A person on two
+-- lists stays with the first one. Records that only share a phone number with
+-- someone on the list (including the 08000000000 placeholder) are left out.
+-- Bro Andrew Urom's list was assigned directly.
 
 insert into public.pending_assignments (contact_id, counsellor_name, counsellor_email)
 select id, 'Bro Oluchukwu Ossai', 'ollyossai@gmail.com' from public.contacts
@@ -27,7 +29,7 @@ on conflict (contact_id) do nothing;
 
 insert into public.pending_assignments (contact_id, counsellor_name, counsellor_email)
 select id, 'Bro Solomon Ekpa', null from public.contacts
-where id in (1661, 1660, 1343, 1362, 1659, 1395, 1655, 1654, 803, 1652, 1644, 1641, 1640, 1638) and assigned_counsellor_id is null
+where id in (1661, 1660, 1343, 1362, 1659, 1395, 1655, 1654, 1652, 1644, 1641, 1640, 1638) and assigned_counsellor_id is null
 on conflict (contact_id) do nothing;
 
 insert into public.pending_assignments (contact_id, counsellor_name, counsellor_email)
@@ -37,7 +39,7 @@ on conflict (contact_id) do nothing;
 
 insert into public.pending_assignments (contact_id, counsellor_name, counsellor_email)
 select id, 'Bro Joshua Monday', null from public.contacts
-where id in (1650, 453, 747, 1649, 89, 1646, 1635, 1634, 1632, 1629, 1614, 1675, 1690, 1689) and assigned_counsellor_id is null
+where id in (1650, 453, 747, 1649, 1646, 1635, 1634, 1632, 1629, 1614, 1675, 1690, 1689) and assigned_counsellor_id is null
 on conflict (contact_id) do nothing;
 
 insert into public.pending_assignments (contact_id, counsellor_name, counsellor_email)
@@ -47,7 +49,7 @@ on conflict (contact_id) do nothing;
 
 insert into public.pending_assignments (contact_id, counsellor_name, counsellor_email)
 select id, 'Sis Omoh Ursula', 'omoursula@gmail.com' from public.contacts
-where id in (1639, 175, 196, 208, 226, 273, 681, 705, 716, 1633, 1631, 1621, 1610, 1686, 1667, 686, 1666, 1665) and assigned_counsellor_id is null
+where id in (1639, 1633, 1631, 1621, 1610, 1686, 1667, 1666, 1665) and assigned_counsellor_id is null
 on conflict (contact_id) do nothing;
 
 -- Anyone on the list who has already signed in gets their contacts now.

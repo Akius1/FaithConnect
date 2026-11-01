@@ -15,6 +15,7 @@ import {
   AcademicCapIcon,
   UserCircleIcon,
   UsersIcon,
+  DocumentChartBarIcon,
   ShieldCheckIcon,
   ArrowRightStartOnRectangleIcon,
   XMarkIcon,
@@ -34,6 +35,7 @@ const navItems: NavItem[] = [
   { name: "Add Contact", href: "/add-contact", icon: UserPlusIcon },
   { name: "Messages", href: "/send-sms", icon: ChatBubbleLeftRightIcon },
   { name: "Counsellors", href: "/counsellors", icon: UsersIcon, adminOnly: true },
+  { name: "Reports", href: "/reports", icon: DocumentChartBarIcon, adminOnly: true },
   { name: "Statistic", href: "/statistics", icon: ChartBarIcon },
   { name: "My Profile", href: "/profile", icon: UserCircleIcon },
 ];
@@ -56,7 +58,7 @@ export default function Sidebar({ open, onClose, viewer }: SidebarProps) {
   return (
     <>
       {/* Desktop */}
-      <aside className="hidden md:flex md:flex-col md:w-64 lg:w-72 bg-gradient-to-br from-indigo-700 to-blue-600 shadow-xl fixed inset-y-0 left-0 z-20">
+      <aside className="hidden print:!hidden md:flex md:flex-col md:w-64 lg:w-72 bg-gradient-to-br from-indigo-700 to-blue-600 shadow-xl fixed inset-y-0 left-0 z-20">
         <SidebarBody pathname={pathname} viewer={viewer} />
       </aside>
 
