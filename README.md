@@ -31,11 +31,12 @@ They are safe to run more than once.
 
 ## Roles
 
-- **Super admin**: sees every contact, assigns contacts to counsellors, manages
-  counsellors and can send bulk messages to anyone.
-- **Counsellor**: sees the contacts assigned to them and anyone they have
-  followed up, can message any single person, and can send bulk messages to the
-  people assigned to them.
+- **Everyone signed in** sees every contact on the dashboard, Follow-up and
+  Foundation Class pages, records feedback and can message any single person.
+- **Counsellor**: can filter to the people assigned to them and send bulk
+  messages to those people.
+- **Super admin**: also manages counsellors, assigns and deletes contacts, sees
+  Reports and can send bulk messages to anyone.
 
 ## WhatsApp webhook
 

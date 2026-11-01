@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
     // Build a base query from the "contacts" table
     let query = getSupabase().from("contacts").select("*");
     // Counsellors only export the contacts they can see.
-    const scope = await contactScopeFilter(guard.access);
+    const scope = await contactScopeFilter();
     if (scope) query = query.or(scope);
 
     // Optional: Filter by phone (using iLike for case-insensitive matching)

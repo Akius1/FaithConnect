@@ -31,7 +31,7 @@ export async function GET(
     const guard = await requireCounsellor();
     if (guard.error) return guard.error;
     const { id } = await params;
-    if (!(await canSeeContact(guard.access, id))) {
+    if (!(await canSeeContact())) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
     
@@ -75,7 +75,7 @@ export async function PUT(
     const guard = await requireCounsellor();
     if (guard.error) return guard.error;
     const { id } = await params;
-    if (!(await canSeeContact(guard.access, id))) {
+    if (!(await canSeeContact())) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
     const body = await request.json();

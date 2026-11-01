@@ -41,7 +41,7 @@ export async function GET() {
     // Before the migration the assignment columns do not exist yet.
     const assignment = `${BASE_COLUMNS}, assigned_counsellor_id, whatsapp_status`;
     const feedbackCols = "feedback(id, date_created, initiator, counsellor_id)";
-    const scope = await contactScopeFilter(access);
+    const scope = await contactScopeFilter();
 
     const load = (columns: string) => selectAll<Row>((from, to) => {
       let query = getSupabase()

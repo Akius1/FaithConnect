@@ -128,7 +128,7 @@ export async function GET(request: Request) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
-    const scope = await contactScopeFilter(guard.access);
+    const scope = await contactScopeFilter();
     const buildQuery = (from: number, to: number) => {
       let query = getSupabase()
         .from("contacts")
@@ -211,7 +211,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    if (!(await canSeeContact(guard.access, id))) {
+    if (!(await canSeeContact())) {
       return NextResponse.json({ error: "Contact not found" }, { status: 404 });
     }
 
